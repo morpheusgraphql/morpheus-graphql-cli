@@ -1,0 +1,35 @@
+name: morpheus-graphql-cli
+version: 0.1.0
+github: "https://github.com/morpheusgraphql/morpheus-graphql-cli"
+license: BSD3
+author: "Daviti Nalchevanidze"
+category: web, graphql, cli
+synopsis: Morpheus GraphQL CLI
+maintainer: "d.nalchevanidze@gmail.com"
+homepage: https://morpheusgraphql.com
+copyright: "(c) 2019 Daviti Nalchevanidze"
+
+description: code generator for Morpheus GraphQL
+
+extra-source-files:
+  - changelog.md
+  - README.md
+
+dependencies:
+  - base                  >= 4.7       && <  5
+  - morpheus-graphql
+  - bytestring
+  - optparse-applicative  >= 0.12      && < 0.15
+  - filepath              >= 1.1       && < 1.5
+
+tests:
+  morpheus-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options: -Wall
+
+executables:
+  morpheus:
+    main: Main.hs
+    source-dirs: src
+    ghc-options: -Wall

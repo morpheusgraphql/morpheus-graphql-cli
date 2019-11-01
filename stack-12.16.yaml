@@ -1,0 +1,5 @@
+# ghc 8.4.4
+resolver: lts-12.16
+
+extra-deps:
+  - morpheus-graphql-0.5.0
