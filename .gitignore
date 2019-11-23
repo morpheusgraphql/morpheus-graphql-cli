@@ -5,3 +5,4 @@ morpheus-graphql-cli.cabal
 morpheus-graphql-cli.iml
 docs/vendor
 out/
+dist/
