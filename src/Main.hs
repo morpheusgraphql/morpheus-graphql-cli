@@ -31,12 +31,7 @@ import           Options.Applicative            ( Parser
 import qualified Options.Applicative           as OA
 import           Paths_morpheus_graphql_cli     ( version )
 import           System.FilePath.Posix          ( takeBaseName )
-import           Rendering.Render               ( renderHaskellDocument )
-
-toMorpheusHaskellAPi :: String -> ByteString -> Either ByteString ByteString
-toMorpheusHaskellAPi moduleName doc = case parseGraphQLDocument doc of
-  Failure errors           -> Left $ pack (show errors)
-  Success { result = lib } -> Right $ renderHaskellDocument moduleName lib
+import           Rendering                      ( toMorpheusHaskellAPi )
 
 morpheusVersion :: String
 morpheusVersion = showVersion version
