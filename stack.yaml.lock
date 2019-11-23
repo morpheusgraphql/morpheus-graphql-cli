@@ -3,7 +3,14 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: morpheus-graphql-0.7.0@sha256:5a91c9ef753d089512d8e00a9fefcc3290ab3b0345f9279920a5d37d6ffc66e8,21020
+    pantry-tree:
+      size: 30418
+      sha256: a2cf5eecf0327f7dacfa6c83da6fec6bfdbaa989365c31fbb2a9ffd0c95ffa74
+  original:
+    hackage: morpheus-graphql-0.7.0
 snapshots:
 - completed:
     size: 524789
