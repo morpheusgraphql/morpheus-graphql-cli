@@ -29,6 +29,7 @@ import           Rendering.Terms                ( Context(..)
                                                 , renderTuple
                                                 , renderUnionCon
                                                 , renderWrapped
+                                                , ioRes
                                                 )
 import           Data.Morpheus.Types.Internal.AST
                                                 ( DataArgument
@@ -122,9 +123,9 @@ renderField Context { scope, pubSub = (channel, content) } (key, DataField { fie
  where
   renderMonad Subscription = "IOSubRes " <> channel <> " " <> content <> " "
   renderMonad Mutation     = case channel of
-    "()" -> "IORes "
+    "()" -> ioRes channel
     _    -> "IOMutRes " <> channel <> " " <> content <> " "
-  renderMonad _ = "IORes "
+  renderMonad _ = ioRes channel
   -----------------------------------------------------------------
   result wrappers
     | isNullable wrappers = renderTuple (renderWrapped wrappers aliasTyCon)

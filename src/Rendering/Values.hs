@@ -20,6 +20,7 @@ import           Rendering.Terms                ( Context(..)
                                                 , renderReturn
                                                 , renderSet
                                                 , renderUnionCon
+                                                , ioRes
                                                 )
 import           Data.Morpheus.Types.Internal.AST
                                                 ( DataField(..)
@@ -105,7 +106,7 @@ renderResolver Context { scope, pubSub = (channel, content) } (name, dataType)
   renderMonad "Mutation" =
     "IOMutRes " <> channel <> " " <> content <> " Mutation"
   renderMonad "Subscription" = "SubRootRes IO " <> channel <> " Subscription"
-  renderMonad tName          = "IORes " <> tName
+  renderMonad tName          = ioRes channel <> tName
   ----------------------------------------------------------------------------------------------------------
   renderFunc = "resolve" <> name <> " = "
     ---------------------------------------

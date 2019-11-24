@@ -16,6 +16,7 @@ module Rendering.Terms
   , renderEqual
   , Scope(..)
   , Context(..)
+  , ioRes
   )
 where
 
@@ -28,6 +29,9 @@ import           Data.Text                      ( Text
 -- MORPHEUS
 import           Data.Morpheus.Types.Internal.AST
                                                 ( TypeWrapper(..) )
+
+ioRes :: Text -> Text
+ioRes event = "IORes " <> event <> " "
 
 indent :: Text
 indent = "  "
