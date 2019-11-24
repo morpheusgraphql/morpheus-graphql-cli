@@ -2,3 +2,6 @@
 resolver: lts-11.10
 
 allow-newer: true
+
+extra-deps:
+  - morpheus-graphql-0.7.0
