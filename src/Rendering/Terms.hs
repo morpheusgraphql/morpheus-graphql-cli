@@ -42,8 +42,8 @@ renderEqual key value = key <> " = " <> value
 renderReturn :: Text
 renderReturn = "return "
 
-renderData :: Text -> Text
-renderData name = "data " <> name <> " = "
+renderData :: Text -> [Text] -> Text
+renderData name tyArgs = "data " <> intercalate " " (name : tyArgs) <> " = "
 
 renderCon :: Text -> Text
 renderCon name = name <> " "

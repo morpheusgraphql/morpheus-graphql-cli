@@ -42,24 +42,28 @@ import           Data.Morpheus.Types.Internal.AST
                                                 )
 
 renderType :: Context -> (Text, DataType) -> Text
-renderType context (name, dataType) =
-  typeIntro <> renderData name <> renderT dataType
+renderType context (name, dataType) = typeIntro <> renderT dataType
  where
   renderT (DataScalar _) =
-    renderCon name
+    renderData name []
+      <> renderCon name
       <> "Int Int"
       <> defineTypeClass "SCALAR"
       <> renderGQLScalar name
   renderT (DataEnum DataTyCon { typeData }) =
-    unionType (map enumName typeData) <> defineTypeClass "ENUM"
+    renderData name [] <> unionType (map enumName typeData) <> defineTypeClass
+      "ENUM"
   renderT (DataUnion DataTyCon { typeData }) =
-    renderUnion name typeData <> defineTypeClass "UNION"
+    renderData name [] <> renderUnion name typeData <> defineTypeClass "UNION"
   renderT (DataInputObject DataTyCon { typeData }) =
-    renderCon name <> renderObject renderInputField typeData <> defineTypeClass
-      "INPUT_OBJECT"
+    renderData name []
+      <> renderCon name
+      <> renderObject renderInputField typeData
+      <> defineTypeClass "INPUT_OBJECT"
   renderT (DataInputUnion _) = "\n -- Error: Input Union Not Supported"
   renderT (DataObject DataTyCon { typeData }) =
-    renderCon name
+    renderData name ["m"]
+      <> renderCon name
       <> renderObject (renderField context) typeData
       <> defineTypeClass "OBJECT"
   ----------------------------------------------------------------------------------------------------------
@@ -136,7 +140,7 @@ renderField Context { scope, pubSub = (channel, content) } (key, DataField { fie
   renderArguments list =
     ( fieldArgTypeName
     , Just
-      (  renderData fieldArgTypeName
+      (  renderData fieldArgTypeName []
       <> renderCon fieldArgTypeName
       <> renderObject renderInputField list
       )

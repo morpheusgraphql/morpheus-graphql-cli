@@ -57,7 +57,7 @@ renderRootResolver Context { pubSub = (channel, _) } DataTypeLib { mutation, sub
       ]
   ---------------------------------------------
     maybeRes (Just (name, _)) = "resolve" <> name
-    maybeRes Nothing          = "return ()"
+    maybeRes Nothing          = "Undefined"
 
 renderResolver :: Context -> (Text, DataType) -> Text
 renderResolver Context { scope, pubSub = (channel, content) } (name, dataType)
