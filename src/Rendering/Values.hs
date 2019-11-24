@@ -36,23 +36,18 @@ renderRootResolver :: Context -> DataTypeLib -> Text
 renderRootResolver Context { pubSub = (channel, _) } DataTypeLib { mutation, subscription }
   = renderSignature <> renderBody <> "\n\n"
  where
-  renderSignature =
-    "rootResolver :: " <> renderRootSig (fst <$> subscription) <> "\n"
+  renderSignature = "rootResolver :: " <> renderRootSig <> "\n"
    where
-    renderRootSig (Just sub) =
-      "GQLRootResolver IO Channel Content Query "
-        <> maybeOperator mutation
-        <> " "
-        <> sub
-    renderRootSig Nothing =
+    renderRootSig =
       "GQLRootResolver IO "
         <> channel
         <> " Query "
-        <> maybeOperator mutation
-        <> " ()"
+        <> maybeOperation mutation
+        <> " "
+        <> maybeOperation subscription
     ----------------------
-    maybeOperator (Just (name, _)) = name
-    maybeOperator Nothing          = "()"
+    maybeOperation (Just (name, _)) = name
+    maybeOperation Nothing          = "Undefined"
   renderBody = "rootResolver =\n  GQLRootResolver" <> renderResObject fields
    where
     fields =
