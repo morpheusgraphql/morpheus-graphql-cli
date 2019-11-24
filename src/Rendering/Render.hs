@@ -62,7 +62,8 @@ renderHaskellDocument modName lib =
       getScope _              = Query
   context = Context
     { moduleName = pack modName
-    , imports    = [ ("GHC.Generics", ["Generic"])
+    , imports    = [ ("Data.Typeable", ["Typeable"])
+                   , ("GHC.Generics" , ["Generic"])
                    , ( "Data.Morpheus.Kind"
                      , ["SCALAR", "ENUM", "INPUT_OBJECT", "OBJECT", "UNION"]
                      )
@@ -73,10 +74,11 @@ renderHaskellDocument modName lib =
                        , "IOMutRes"
                        , "IOSubRes"
                        , "Event(..)"
-                       , "SubRootRes"
                        , "GQLType(..)"
                        , "GQLScalar(..)"
                        , "ScalarValue(..)"
+                       , "Undefined(..)"
+                       , "ResolveQ"
                        ]
                      )
                    , ("Data.Text", ["Text"])
