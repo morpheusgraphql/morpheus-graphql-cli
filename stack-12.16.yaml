@@ -6,3 +6,4 @@ allow-newer: true
 extra-deps:
   - morpheus-graphql-0.7.0
   - megaparsec-7.0.5
+  - aeson-1.4.4.0

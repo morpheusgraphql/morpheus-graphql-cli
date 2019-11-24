@@ -31,18 +31,18 @@ import           Web.Scotty                     ( body
                                                 )
 
 -- examples
-import           Simple                         ( fetUser
-                                                , fetchHero
-                                                )
-import           Mutation                       ( mythologyApi )
-import           Subscription                   ( thSimpleApi )
+import qualified Simple                         ( rootResolver )
+import qualified Mutation                       ( rootResolver )
+import qualified Subscription                   ( rootResolver )
+
+apiBy path api = api $ do
+  post path $ raw =<< (liftIO . Simple.rootResolver =<< body)
+  get path $ file "./examples/index.html"
 
 main :: IO ()
 main = do
   state   <- initGQLState
   httpApp <- httpServer state
-  fetchHero >>= print
-  fetUser (interpreter gqlRoot state) >>= print
   Warp.runSettings settings
     $ WaiWs.websocketsOr defaultConnectionOptions (wsApp state) httpApp
  where
@@ -53,7 +53,7 @@ main = do
     post "/" $ raw =<< (liftIO . interpreter gqlRoot state =<< body)
     get "/" $ file "./examples/index.html"
     get "/schema.gql" $ raw $ toGraphQLDocument $ Identity gqlRoot
-    post "/mythology" $ raw =<< (liftIO . mythologyApi =<< body)
-    get "/mythology" $ file "./examples/index.html"
-    post "/th" $ raw =<< (liftIO . thSimpleApi =<< body)
-    get "/th" $ file "./examples/index.html"
+    post "/mutation" $ raw =<< (liftIO . Mutation.rootResolver =<< body)
+    get "/mutation" $ file "./examples/index.html"
+    apiBy "/simple" Simple.rootResolver
+
