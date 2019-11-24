@@ -32,27 +32,31 @@ import           Web.Scotty                     ( body
 
 -- examples
 import qualified Simple                         ( rootResolver )
-import qualified Mutation                       ( rootResolver )
-import qualified Subscription                   ( rootResolver )
+--import qualified Mutation                       ( rootResolver )
+--import qualified Subscription                   ( rootResolver )
 
-apiBy path api = api $ do
-  post path $ raw =<< (liftIO . Simple.rootResolver =<< body)
+apiBy path api = do
+  post path $ raw =<< (liftIO . api =<< body)
   get path $ file "./examples/index.html"
 
 main :: IO ()
 main = do
   state   <- initGQLState
   httpApp <- httpServer state
-  Warp.runSettings settings
-    $ WaiWs.websocketsOr defaultConnectionOptions (wsApp state) httpApp
+  Warp.runSettings settings httpApp
+  --Warp.runSettings settings
+  --  $ WaiWs.websocketsOr defaultConnectionOptions (wsApp state) httpApp
+
+
  where
   settings = Warp.setPort 3000 Warp.defaultSettings
-  wsApp    = gqlSocketApp gqlRoot
-  httpServer :: GQLState IO EVENT -> IO Wai.Application
-  httpServer state = scottyApp $ do
-    post "/" $ raw =<< (liftIO . interpreter gqlRoot state =<< body)
-    get "/" $ file "./examples/index.html"
-    get "/schema.gql" $ raw $ toGraphQLDocument $ Identity gqlRoot
-    apiBy "/mutation" Mutation.rootResolver
-    apiBy "/simple"   Simple.rootResolver
+  --wsApp    = gqlSocketApp gqlRoot
+--  httpServer :: GQLState IO EVENT -> IO Wai.Application
+  httpServer state =
+    scottyApp $ apiBy "/simple" (interpreter Simple.rootResolver)
+  --  post "/" $ raw =<< (liftIO . interpreter gqlRoot state =<< body)
+  --  get "/" $ file "./examples/index.html"
+  --  get "/schema.gql" $ raw $ toGraphQLDocument $ Identity gqlRoot
+  --  apiBy "/mutation" Mutation.rootResolver
+
 
