@@ -3,10 +3,24 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: morpheus-graphql-0.7.0@sha256:5a91c9ef753d089512d8e00a9fefcc3290ab3b0345f9279920a5d37d6ffc66e8,21020
+    pantry-tree:
+      size: 30418
+      sha256: a2cf5eecf0327f7dacfa6c83da6fec6bfdbaa989365c31fbb2a9ffd0c95ffa74
+  original:
+    hackage: morpheus-graphql-0.7.0
+- completed:
+    hackage: aeson-1.4.4.0@sha256:a6f5eddcff9526c786a1b77bdfade54b42f67c066b379bbc4b55ffb291e6c7d6,7251
+    pantry-tree:
+      size: 40193
+      sha256: 7de75d80a5b3debd556ac6443f2ffeb49504c2aa08709ab8803174fc18a6ad90
+  original:
+    hackage: aeson-1.4.4.0
 snapshots:
 - completed:
-    size: 524789
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/8.yaml
-    sha256: 8af5eb80734f02621d37e82cc0cde614af2ddc9c320610acb0b1b6d9ac162930
-  original: lts-14.8
+    size: 525663
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/14.yaml
+    sha256: 6edc48df46eb8bf7b861e98dd30d021a92c2e1820c9bb6528aac5d997b0e14ef
+  original: lts-14.14

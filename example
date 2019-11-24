@@ -1,0 +1,5 @@
+morpheus build examples/simple.gql examples/src/Simple.hs
+
+morpheus build examples/mutation.gql examples/src/Mutation.hs
+
+morpheus build examples/subscription.gql examples/src/Subscription.hs

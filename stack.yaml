@@ -1,5 +1,6 @@
 # ghc 8.6.5
-resolver: lts-14.8
+resolver: lts-14.14
 
 extra-deps:
-  - ../morpheus-graphql
+  - morpheus-graphql-0.7.0
+  - aeson-1.4.4.0
