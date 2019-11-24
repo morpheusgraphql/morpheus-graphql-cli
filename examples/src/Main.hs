@@ -53,7 +53,6 @@ main = do
     post "/" $ raw =<< (liftIO . interpreter gqlRoot state =<< body)
     get "/" $ file "./examples/index.html"
     get "/schema.gql" $ raw $ toGraphQLDocument $ Identity gqlRoot
-    post "/mutation" $ raw =<< (liftIO . Mutation.rootResolver =<< body)
-    get "/mutation" $ file "./examples/index.html"
-    apiBy "/simple" Simple.rootResolver
+    apiBy "/mutation" Mutation.rootResolver
+    apiBy "/simple"   Simple.rootResolver
 
