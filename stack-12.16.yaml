@@ -5,5 +5,11 @@ allow-newer: true
 
 extra-deps:
   - morpheus-graphql-0.7.0
+  - bifunctors-5.5.2
+  - base-orphans-0.7
   - megaparsec-7.0.5
+  - parser-combinators-1.1.0
   - aeson-1.4.4.0
+  - time-compat-1.9.2.2
+  - th-abstraction-0.2.11.0
+  - scotty-0.11.2

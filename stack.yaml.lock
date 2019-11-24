@@ -11,6 +11,13 @@ packages:
       sha256: a2cf5eecf0327f7dacfa6c83da6fec6bfdbaa989365c31fbb2a9ffd0c95ffa74
   original:
     hackage: morpheus-graphql-0.7.0
+- completed:
+    hackage: aeson-1.4.4.0@sha256:a6f5eddcff9526c786a1b77bdfade54b42f67c066b379bbc4b55ffb291e6c7d6,7251
+    pantry-tree:
+      size: 40193
+      sha256: 7de75d80a5b3debd556ac6443f2ffeb49504c2aa08709ab8803174fc18a6ad90
+  original:
+    hackage: aeson-1.4.4.0
 snapshots:
 - completed:
     size: 525663
