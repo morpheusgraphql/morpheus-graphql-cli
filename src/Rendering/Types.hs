@@ -116,20 +116,14 @@ renderInputField (key, DataField { fieldType = TypeAlias { aliasTyCon, aliasWrap
   = (key `renderAssignment` renderWrapped aliasWrappers aliasTyCon, Nothing)
 
 renderField :: Context -> (Text, DataField) -> (Text, Maybe Text)
-renderField Context { scope, pubSub = (channel, content) } (key, DataField { fieldType = TypeAlias { aliasWrappers, aliasTyCon }, fieldArgs })
+renderField Context { pubSub = (channel, content) } (key, DataField { fieldType = TypeAlias { aliasWrappers, aliasTyCon }, fieldArgs })
   = ( key
       `renderAssignment` argTypeName
-      <>                 " -> "
-      <>                 renderMonad scope
+      <>                 " -> m "
       <>                 result aliasWrappers
     , argTypes
     )
  where
-  renderMonad Subscription = "IOSubRes " <> channel <> " " <> content <> " "
-  renderMonad Mutation     = case channel of
-    "()" -> ioRes channel
-    _    -> "IOMutRes " <> channel <> " " <> content <> " "
-  renderMonad _ = ioRes channel
   -----------------------------------------------------------------
   result wrappers
     | isNullable wrappers = renderTuple (renderWrapped wrappers aliasTyCon)

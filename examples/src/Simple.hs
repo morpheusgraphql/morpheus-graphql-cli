@@ -36,13 +36,10 @@ rootResolver = GQLRootResolver { queryResolver        = resolveQuery
                                , subscriptionResolver = Undefined
                                }
 
-
-
-
 ---- GQL Query ------------------------------- 
 data Query m = Query
-    { deity :: ArgDeity -> m Deity
-  ,  character :: ArgCharacter -> m Character
+    { deity :: ArgDeity -> m (Deity m)
+  ,  character :: ArgCharacter -> m (Character m)
     }
  deriving (Generic)
 
@@ -57,35 +54,26 @@ data ArgCharacter = ArgCharacter
     }
  deriving (Generic)
 
-instance Typeable m => GQLType (Query m) where
+instance (Typeable m) => GQLType (Query m) where
   type KIND (Query m) = OBJECT
-
 
 resolveQuery :: Query (IORes ())
 resolveQuery =
   Query { deity = const resolveDeity, character = const resolveCharacter }
 
-
-
-
 ---- GQL Deity ------------------------------- 
-data Deity = Deity
-    { fullName :: () -> IORes () Text
-  ,  power :: () -> IORes () (Maybe Power)
+data Deity m = Deity
+    { fullName :: () -> m Text
+  ,  power :: () -> m (Maybe Power)
     }
  deriving (Generic)
 
-instance GQLType Deity where
-  type KIND Deity = OBJECT
+instance (Typeable m) => GQLType (Deity m) where
+  type KIND (Deity m) = OBJECT
 
-
-
-resolveDeity :: IORes () Deity
+resolveDeity :: ResolveQ () IO Deity
 resolveDeity =
   return Deity { fullName = const $ return "", power = const $ return Nothing }
-
-
-
 
 ---- GQL City ------------------------------- 
 data City =
@@ -97,12 +85,8 @@ data City =
 instance GQLType City where
   type KIND City = ENUM
 
-
-
 resolveCity :: IORes () City
 resolveCity = return Athens
-
-
 
 ---- GQL Power ------------------------------- 
 data Power = Power Int Int
@@ -114,40 +98,33 @@ instance GQLScalar  Power where
   parseValue _ = pure (Power 0 0)
   serialize (Power x y) = Int (x + y)
 
-
-
 resolvePower :: IORes () Power
 resolvePower = return $ Power 0 0
 
-
-
 ---- GQL Creature ------------------------------- 
-data Creature = Creature
-    { creatureName :: () -> IORes () Text
-  ,  realm :: () -> IORes () City
-  ,  immortality :: () -> IORes () Bool
+data Creature m = Creature
+    { creatureName :: () -> m Text
+  ,  realm :: () -> m City
+  ,  immortality :: () -> m Bool
     }
  deriving (Generic)
 
-instance GQLType Creature where
-  type KIND Creature = OBJECT
+instance Typeable m => GQLType (Creature m) where
+  type KIND (Creature m) = OBJECT
 
-resolveCreature :: IORes () Creature
+resolveCreature :: ResolveQ () IO Creature
 resolveCreature = return Creature { creatureName = const $ return ""
                                   , realm        = const resolveCity
-                                  , immortality  = const $ return False
+                                  , immortality  = const $ pure False
                                   }
 
-
 ---- GQL Character ------------------------------- 
-data Character =
-  Character_CREATURE Creature
-  | Character_DEITY Deity deriving (Generic)
+data Character m =
+  Character_CREATURE (Creature m)
+  | Character_DEITY (Deity m) deriving (Generic)
 
-instance GQLType Character where
-  type KIND Character = UNION
+instance (Typeable m) => GQLType (Character m) where
+  type KIND (Character m) = UNION
 
-
-
-resolveCharacter :: IORes () Character
+resolveCharacter :: ResolveQ () IO Character
 resolveCharacter = Character_CREATURE <$> resolveCreature
