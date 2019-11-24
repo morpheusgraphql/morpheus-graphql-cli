@@ -33,8 +33,8 @@ import           Data.Morpheus.Types.Internal.AST
                                                 )
 
 renderRootResolver :: Context -> DataTypeLib -> Text
-renderRootResolver _ DataTypeLib { mutation, subscription } =
-  renderSignature <> renderBody <> "\n\n"
+renderRootResolver Context { pubSub = (channel, _) } DataTypeLib { mutation, subscription }
+  = renderSignature <> renderBody <> "\n\n"
  where
   renderSignature =
     "rootResolver :: " <> renderRootSig (fst <$> subscription) <> "\n"
@@ -45,7 +45,11 @@ renderRootResolver _ DataTypeLib { mutation, subscription } =
         <> " "
         <> sub
     renderRootSig Nothing =
-      "GQLRootResolver IO () () Query " <> maybeOperator mutation <> " ()"
+      "GQLRootResolver IO "
+        <> channel
+        <> " Query "
+        <> maybeOperator mutation
+        <> " ()"
     ----------------------
     maybeOperator (Just (name, _)) = name
     maybeOperator Nothing          = "()"
