@@ -68,7 +68,7 @@ renderHaskellDocument modName lib =
                      )
                    , ( "Data.Morpheus.Types"
                      , [ "GQLRootResolver(..)"
-                       , "toMutResolver"
+                       , "Resolver(..)"
                        , "IORes"
                        , "IOMutRes"
                        , "IOSubRes"
