@@ -31,14 +31,11 @@ import           Web.Scotty                     ( body
                                                 )
 
 -- examples
-import           Client.Client                  ( fetUser
+import           Simple                         ( fetUser
                                                 , fetchHero
                                                 )
-import           Server.Mythology.API           ( mythologyApi )
-import           Server.TH.Simple               ( thSimpleApi )
-import           Server.Sophisticated.API       ( EVENT
-                                                , gqlRoot
-                                                )
+import           Mutation                       ( mythologyApi )
+import           Subscription                   ( thSimpleApi )
 
 main :: IO ()
 main = do
