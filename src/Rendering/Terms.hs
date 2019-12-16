@@ -20,11 +20,14 @@ module Rendering.Terms
   )
 where
 
+
 import           Data.Semigroup                 ( (<>) )
 import           Data.Text                      ( Text
                                                 , intercalate
                                                 , toUpper
                                                 )
+import qualified Data.Text                     as T
+                                                ( unwords )
 
 -- MORPHEUS
 import           Data.Morpheus.Types.Internal.AST
@@ -43,7 +46,7 @@ renderReturn :: Text
 renderReturn = "return "
 
 renderData :: Text -> [Text] -> Text
-renderData name tyArgs = "data " <> intercalate " " (name : tyArgs) <> " = "
+renderData name tyArgs = "data " <> T.unwords (name : tyArgs) <> " = "
 
 renderCon :: Text -> Text
 renderCon name = name <> " "

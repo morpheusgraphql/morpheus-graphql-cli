@@ -35,14 +35,15 @@ import           Data.Morpheus.Types.Internal.AST
                                                 ( DataArgument
                                                 , DataField(..)
                                                 , DataType(..)
-                                                , DataTyCon(..)
-                                                , TypeAlias(..)
+                                                , DataTypeContent(..)
+                                                , TypeRef(..)
                                                 , isNullable
                                                 , DataEnumValue(..)
                                                 )
 
 renderType :: Context -> (Text, DataType) -> Text
-renderType context (name, dataType) = typeIntro <> renderT dataType
+renderType context (name, DataType { typeContent }) = typeIntro
+  <> renderT typeContent
  where
   renderT (DataScalar _) =
     renderData name []
@@ -50,22 +51,22 @@ renderType context (name, dataType) = typeIntro <> renderT dataType
       <> "Int Int"
       <> defineTypeClass "SCALAR"
       <> renderGQLScalar name
-  renderT (DataEnum DataTyCon { typeData }) =
-    renderData name [] <> unionType (map enumName typeData) <> defineTypeClass
+  renderT (DataEnum enums) =
+    renderData name [] <> unionType (map enumName enums) <> defineTypeClass
       "ENUM"
-  renderT (DataUnion DataTyCon { typeData }) =
-    renderData name [] <> renderUnion name typeData <> defineTypeClass "UNION"
-  renderT (DataInputObject DataTyCon { typeData }) =
+  renderT (DataUnion members) =
+    renderData name [] <> renderUnion name members <> defineTypeClass "UNION"
+  renderT (DataInputObject fields) =
     renderData name []
       <> renderCon name
-      <> renderObject renderInputField typeData
+      <> renderObject renderInputField fields
       <> defineTypeClass "INPUT_OBJECT"
-  renderT (DataInputUnion _) = "\n -- Error: Input Union Not Supported"
-  renderT (DataObject DataTyCon { typeData }) =
+  renderT (DataObject fields) =
     renderData name ["m"]
       <> renderCon name
-      <> renderObject (renderField context) typeData
+      <> renderObject (renderField context) fields
       <> defineTypeClass "OBJECT"
+  renderT (DataInputUnion _) = "\n -- Error: Input Union Not Supported"
   ----------------------------------------------------------------------------------------------------------
   typeIntro = "\n\n---- GQL " <> name <> " ------------------------------- \n"
   ----------------------------------------------------------------------------------------------------------
@@ -112,22 +113,17 @@ renderObject f list = intercalate "\n\n" $ renderMainType : catMaybes types
   (fields, types) = unzip (map f list)
 
 renderInputField :: (Text, DataField) -> (Text, Maybe Text)
-renderInputField (key, DataField { fieldType = TypeAlias { aliasTyCon, aliasWrappers } })
-  = (key `renderAssignment` renderWrapped aliasWrappers aliasTyCon, Nothing)
+renderInputField (key, DataField { fieldType = TypeRef { typeConName, typeWrappers } })
+  = (key `renderAssignment` renderWrapped typeWrappers typeConName, Nothing)
 
 renderField :: Context -> (Text, DataField) -> (Text, Maybe Text)
-renderField Context { pubSub = (channel, content) } (key, DataField { fieldType = TypeAlias { aliasWrappers, aliasTyCon }, fieldArgs })
-  = ( key
-      `renderAssignment` argTypeName
-      <>                 " -> m "
-      <>                 result aliasWrappers
-    , argTypes
-    )
+renderField Context { pubSub = (channel, content) } (key, DataField { fieldType = tyRef@TypeRef { typeConName, typeWrappers }, fieldArgs })
+  = (key `renderAssignment` argTypeName <> " -> m " <> result, argTypes)
  where
   -----------------------------------------------------------------
-  result wrappers
-    | isNullable wrappers = renderTuple (renderWrapped wrappers aliasTyCon)
-    | otherwise           = renderWrapped wrappers aliasTyCon
+  result
+    | isNullable tyRef = renderTuple (renderWrapped typeWrappers typeConName)
+    | otherwise        = renderWrapped typeWrappers typeConName
   (argTypeName, argTypes) = renderArguments fieldArgs
   renderArguments :: [(Text, DataArgument)] -> (Text, Maybe Text)
   renderArguments [] = ("()", Nothing)

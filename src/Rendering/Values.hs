@@ -25,10 +25,10 @@ import           Rendering.Terms                ( Context(..)
 import           Data.Morpheus.Types.Internal.AST
                                                 ( DataField(..)
                                                 , DataType(..)
-                                                , DataTyCon(..)
+                                                , DataTypeContent(..)
                                                 , DataTypeLib(..)
                                                 , DataEnumValue(..)
-                                                , TypeAlias(..)
+                                                , TypeRef(..)
                                                 , TypeWrapper(..)
                                                 )
 
@@ -60,23 +60,22 @@ renderRootResolver Context { pubSub = (channel, _) } DataTypeLib { mutation, sub
     maybeRes Nothing          = "Undefined"
 
 renderResolver :: Context -> (Text, DataType) -> Text
-renderResolver Context { scope, pubSub = (channel, content) } (name, dataType)
-  = renderSig dataType
+renderResolver Context { scope, pubSub = (channel, content) } (name, DataType { typeName, typeContent })
+  = renderSig typeContent
  where
   renderSig DataScalar{} =
     defFunc <> renderReturn <> "$ " <> renderCon name <> "0 0"
-  renderSig (DataEnum DataTyCon { typeData }) =
-    defFunc <> renderReturn <> renderCon (enumName $ head typeData)
-  renderSig (DataUnion DataTyCon { typeData }) =
-    defFunc <> renderUnionCon name typeCon <> " <$> " <> "resolve" <> typeCon
-    where typeCon = head typeData
-  renderSig (DataObject DataTyCon { typeData }) =
+  renderSig (DataEnum enums) =
+    defFunc <> renderReturn <> renderCon (enumName $ head enums)
+  renderSig (DataUnion (member : _)) =
+    defFunc <> renderUnionCon typeName member <> " <$> " <> "resolve" <> member
+  renderSig (DataObject fields) =
     defFunc <> renderReturn <> renderCon name <> renderObjFields
    where
-    renderObjFields = renderResObject (map renderFieldRes typeData)
-    renderFieldRes (key, DataField { fieldType = TypeAlias { aliasWrappers, aliasTyCon } })
+    renderObjFields = renderResObject (map renderFieldRes fields)
+    renderFieldRes (key, DataField { fieldType = TypeRef { typeWrappers, typeConName } })
       = ( key
-        , "const " <> withScope scope (renderValue aliasWrappers aliasTyCon)
+        , "const " <> withScope scope (renderValue typeWrappers typeConName)
         )
      where
       renderValue (TypeMaybe : _) = const $ "$ " <> renderReturn <> "Nothing"
