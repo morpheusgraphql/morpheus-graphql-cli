@@ -94,8 +94,7 @@ renderInstanceHead className name =
 
 
 renderDeriving :: [Text] -> Text
-renderDeriving list =
-  renderTuple "deriving ( " <> T.unwords ("Generic" : list) <> ") "
+renderDeriving list = "deriving " <> renderTuple (T.unwords ("Generic" : list))
 
 data Scope
   = Mutation
