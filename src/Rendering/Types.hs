@@ -30,6 +30,8 @@ import           Rendering.Terms                ( Context(..)
                                                 , renderUnionCon
                                                 , renderWrapped
                                                 , ioRes
+                                                , renderDeriving
+                                                , renderInstanceHead
                                                 )
 import           Data.Morpheus.Types.Internal.AST
                                                 ( DataArgument
@@ -72,7 +74,7 @@ renderType context (name, DataType { typeContent }) = typeIntro
   ----------------------------------------------------------------------------------------------------------
   defineTypeClass kind =
     "\n\n"
-      <> renderTypeInstanceHead "GQLType" name
+      <> renderInstanceHead "GQLType" name
       <> indent
       <> "type KIND "
       <> name
@@ -81,13 +83,10 @@ renderType context (name, DataType { typeContent }) = typeIntro
       <> "\n\n"
     ----------------------------------------------------------------------------------------------------------
 
-renderTypeInstanceHead :: Text -> Text -> Text
-renderTypeInstanceHead className name =
-  "instance " <> className <> " " <> name <> " where\n"
 
 renderGQLScalar :: Text -> Text
 renderGQLScalar name =
-  renderTypeInstanceHead "GQLScalar " name
+  renderInstanceHead "GQLScalar " name
     <> renderParse
     <> renderSerialize
     <> "\n\n"
@@ -99,17 +98,16 @@ renderUnion :: Text -> [Text] -> Text
 renderUnion typeName = unionType . map renderElem
   where renderElem name = renderUnionCon typeName name <> name
 
+
+
 unionType :: [Text] -> Text
 unionType ls =
-  "\n"
-    <> indent
-    <> intercalate ("\n" <> indent <> "| ") ls
-    <> " deriving (Generic)"
+  "\n" <> indent <> intercalate ("\n" <> indent <> "| ") ls <> renderDeriving []
 
 renderObject :: (a -> (Text, Maybe Text)) -> [a] -> Text
 renderObject f list = intercalate "\n\n" $ renderMainType : catMaybes types
  where
-  renderMainType  = renderSet fields <> " deriving (Generic)"
+  renderMainType  = renderSet fields <> renderDeriving []
   (fields, types) = unzip (map f list)
 
 renderInputField :: (Text, DataField) -> (Text, Maybe Text)

@@ -17,6 +17,8 @@ module Rendering.Terms
   , Scope(..)
   , Context(..)
   , ioRes
+  , renderDeriving
+  , renderInstanceHead
   )
 where
 
@@ -83,6 +85,17 @@ strToText x        = x
 renderUnionCon :: Text -> Text -> Text
 renderUnionCon typeName conName =
   renderCon (typeName <> "_" <> toUpper conName)
+
+
+
+renderInstanceHead :: Text -> Text -> Text
+renderInstanceHead className name =
+  "instance " <> className <> " " <> name <> " where\n"
+
+
+renderDeriving :: [Text] -> Text
+renderDeriving list =
+  renderTuple "deriving ( " <> T.unwords ("Generic" : list) <> ") "
 
 data Scope
   = Mutation
