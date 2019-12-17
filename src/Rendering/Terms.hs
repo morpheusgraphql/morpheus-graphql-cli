@@ -20,6 +20,7 @@ module Rendering.Terms
   , renderDeriving
   , renderInstanceHead
   , renderGQLTypeInstance
+  , renderTypeIntro
   )
 where
 
@@ -100,8 +101,10 @@ renderGQLTypeInstance typeName kind =
     <> " = "
     <> kind
     <> "\n\n"
-        ----------------------------------------------------------------------------------------------------------
 
+renderTypeIntro :: Name -> Text
+renderTypeIntro typeName =
+  "\n--- GQL " <> typeName <> " ------------------------------- \n"
 
 renderInstanceHead :: Text -> Text -> Text
 renderInstanceHead className name =

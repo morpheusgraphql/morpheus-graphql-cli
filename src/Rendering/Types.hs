@@ -33,6 +33,7 @@ import           Rendering.Terms                ( Context(..)
                                                 , renderDeriving
                                                 , renderInstanceHead
                                                 , renderGQLTypeInstance
+                                                , renderTypeIntro
                                                 )
 import           Data.Morpheus.Types.Internal.AST
                                                 ( DataArgument
@@ -52,7 +53,7 @@ class RenderType a where
     render :: Context -> a -> Text
 
 instance RenderType DataType where
-  render context DataType { typeContent, typeName } = typeIntro
+  render context DataType { typeContent, typeName } = renderTypeIntro typeName
     <> renderT typeContent
    where
     renderT (DataScalar _) =
@@ -60,32 +61,24 @@ instance RenderType DataType where
         <> renderCon typeName
         <> "Int Int"
         <> renderGQLScalar typeName
-        <> defineTypeClass "SCALAR"
+        <> renderGQLTypeInstance typeName "SCALAR"
     renderT (DataEnum enums) =
       renderData typeName []
         <> unionType (map enumName enums)
-        <> defineTypeClass "ENUM"
-    renderT (DataUnion members) =
-      renderData typeName [] <> renderUnion typeName members <> renderDeriving
-        ["GQLType"]
+        <> renderGQLTypeInstance typeName "ENUM"
     renderT (DataInputObject fields) =
       renderData typeName []
         <> renderCon typeName
         <> renderObject renderInputField fields
-        <> defineTypeClass "INPUT"
+        <> renderGQLTypeInstance typeName "INPUT"
+    renderT (DataUnion members) =
+      renderData typeName [] <> renderUnion typeName members <> renderDeriving
+        ["GQLType"]
     renderT (DataObject fields) =
       renderData typeName ["m"]
         <> renderCon typeName
         <> renderObject (renderField context) fields
     renderT (DataInputUnion _) = "\n -- Error: Input Union Not Supported"
-    ----------------
-    defineTypeClass = renderGQLTypeInstance typeName
-    ----------------------------------------------------------------------------------------------------------
-    typeIntro =
-      "\n--- GQL " <> typeName <> " ------------------------------- \n"
-
-
-
 
 renderGQLScalar :: Text -> Text
 renderGQLScalar name =
