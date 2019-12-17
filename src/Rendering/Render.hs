@@ -83,7 +83,11 @@ renderHaskellDocument modName lib =
                      )
                    , ("Data.Text", ["Text"])
                    ]
-    , extensions = ["OverloadedStrings", "DeriveGeneric", "TypeFamilies"]
+    , extensions = [ "OverloadedStrings"
+                   , "DeriveGeneric"
+                   , "TypeFamilies"
+                   , "DeriveAnyClass"
+                   ]
     , scope      = Query
     , pubSub     = onSub ("Channel", "Content") ("()", "()")
     }

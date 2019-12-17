@@ -74,17 +74,19 @@ instance RenderType DataType where
         $  renderData typeName []
         <> renderCon typeName
         <> renderObject renderInputField fields
+        <> renderDeriving []
         <> renderGQLTypeInstance typeName "INPUT"
     renderT (DataUnion members) =
       pure
-        $  renderData typeName ["m"]
+        $  renderData typeName ["(m :: * -> *)"]
         <> renderUnion typeName members
         <> renderDeriving ["GQLType"]
     renderT (DataObject fields) =
       pure
-        $  renderData typeName ["m"]
+        $  renderData typeName ["(m :: * -> *)"]
         <> renderCon typeName
         <> renderObject (renderField context) fields
+        <> renderDeriving ["GQLType"]
     renderT (DataInputUnion _) = Left "Input Union Not Supported"
 
 renderGQLScalar :: Text -> Text
@@ -100,7 +102,8 @@ renderGQLScalar name =
 
 renderUnion :: Text -> [Text] -> Text
 renderUnion typeName = unionType . map renderElem
-  where renderElem name = renderUnionCon typeName name <> ("( " <>name <> " m)")
+ where
+  renderElem name = renderUnionCon typeName name <> ("( " <> name <> " m)")
 
 unionType :: [Text] -> Text
 unionType ls = "\n" <> indent <> intercalate ("\n" <> indent <> "| ") ls
@@ -108,7 +111,7 @@ unionType ls = "\n" <> indent <> intercalate ("\n" <> indent <> "| ") ls
 renderObject :: (a -> (Text, Maybe Text)) -> [a] -> Text
 renderObject f list = intercalate "\n\n" $ renderMainType : catMaybes types
  where
-  renderMainType  = renderSet fields <> renderDeriving []
+  renderMainType  = renderSet fields
   (fields, types) = unzip (map f list)
 
 renderInputField :: (Text, DataField) -> (Text, Maybe Text)
