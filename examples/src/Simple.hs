@@ -39,20 +39,23 @@ rootResolver = GQLRootResolver { queryResolver        = resolveQuery
                                }
 
 ---- GQL Query ------------------------------- 
-data Query (m :: * -> *) = Query
+data Query (m :: * -> *) =
+  Query
     {   deity :: ArgDeity -> m (Deity m)
-      ,  character :: ArgCharacter -> m (Character m)
+      , character :: ArgCharacter -> m (Character m)
     }
  deriving (Generic, GQLType)
 
-newtype ArgDeity = ArgDeity
+newtype ArgDeity =
+  ArgDeity
     { name :: Maybe [Maybe [Maybe [[Maybe [Text]]]]]
     }
  deriving (Generic)
 
-data ArgCharacter = ArgCharacter
-    { characterID :: Text
-  ,  age :: Maybe Int
+data ArgCharacter =
+  ArgCharacter
+    {  characterID :: Text
+    ,  age :: Maybe Int
     }
  deriving (Generic)
 
@@ -61,9 +64,10 @@ resolveQuery =
   Query { deity = const resolveDeity, character = const resolveCharacter }
 
 ---- GQL Deity ------------------------------- 
-data Deity (m :: * -> *) = Deity
-    { fullName :: () -> m Text
-  ,  power :: () -> m (Maybe Power)
+data Deity (m :: * -> *) =
+  Deity
+    {  fullName :: () -> m Text
+    ,  power :: () -> m (Maybe Power)
     }
  deriving (Generic, GQLType)
 
