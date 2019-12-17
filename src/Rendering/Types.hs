@@ -100,7 +100,7 @@ renderGQLScalar name =
 
 renderUnion :: Text -> [Text] -> Text
 renderUnion typeName = unionType . map renderElem
-  where renderElem name = renderUnionCon typeName name <> (name <> " m")
+  where renderElem name = renderUnionCon typeName name <> ("( " <>name <> " m)")
 
 unionType :: [Text] -> Text
 unionType ls = "\n" <> indent <> intercalate ("\n" <> indent <> "| ") ls
