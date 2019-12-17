@@ -87,21 +87,17 @@ instance RenderType DataType where
       pure
         $  renderData typeName []
         <> unionType (map enumName enums)
+        <> renderDeriving []
         <> renderGQLTypeInstance typeName "ENUM"
     renderT (DataInputObject fields) =
       pure
         $  renderData typeName []
         <> renderCon typeName
         <> renderObject renderInputField fields
-        <> renderDeriving []
         <> renderGQLTypeInstance typeName "INPUT"
     renderT (DataObject fields) = do
-      body <- renderResObject (renderField context) fields
-      pure
-        $  renderData typeName ["(m :: * -> *)"]
-        <> renderCon typeName
-        <> body
-        <> renderDeriving ["GQLType"]
+      body <- renderResObject context fields
+      pure $ renderData typeName ["(m :: * -> *)"] <> renderCon typeName <> body
     renderT (DataUnion members) =
       pure
         $  renderData typeName ["(m :: * -> *)"]
@@ -128,15 +124,18 @@ renderUnion typeName = unionType . map renderElem
 unionType :: [Text] -> Text
 unionType ls = indent <> intercalate ("\n" <> indent <> "| ") ls
 
-renderResObject :: Monad m => (a -> m (Text, Maybe Text)) -> [a] -> m Text
-renderResObject f list = do
-  (fields, types) <- unzip <$> traverse f list
-  pure $ intercalate "\n\n" $ renderSet fields : catMaybes types
+renderResObject :: Context -> [(Name, DataField)] -> Result Text
+renderResObject context list = do
+  (fields, arguments) <- unzip <$> traverse (renderField context) list
+  pure
+    $ intercalate "\n\n"
+    $ (renderSet fields <> renderDeriving ["GQLType"])
+    : catMaybes arguments
 
 renderObject :: (a -> (Text, Maybe Text)) -> [a] -> Text
 renderObject f list = intercalate "\n\n" $ renderMainType : catMaybes types
  where
-  renderMainType  = renderSet fields
+  renderMainType  = renderSet fields <> renderDeriving []
   (fields, types) = unzip (map f list)
 
 renderInputField :: (Text, DataField) -> (Text, Maybe Text)
