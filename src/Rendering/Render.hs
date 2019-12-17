@@ -7,6 +7,7 @@ module Rendering.Render
   )
 where
 
+import           Data.Maybe                     ( isJust )
 import           Data.ByteString.Lazy.Char8     ( ByteString )
 import           Data.Semigroup                 ( (<>) )
 import           Data.Text                      ( Text
@@ -22,6 +23,8 @@ import           Data.Text.Lazy.Encoding        ( encodeUtf8 )
 -- MORPHEUS
 import           Rendering.Terms                ( Context(..)
                                                 , renderExtension
+                                                , newline
+                                                , double
                                                 )
 import           Rendering.Types                ( renderType )
 import           Rendering.Values               ( Scope(..)
@@ -39,7 +42,7 @@ renderHaskellDocument modName lib =
     $  renderLanguageExtensions context
     <> renderExports context
     <> renderImports context
-    <> onSub renderApiEvents ""
+    <> renderApiEvents
     <> renderRootResolver context lib
     <> types
  where
@@ -47,11 +50,14 @@ renderHaskellDocument modName lib =
   onSub onS els = case subscription lib of
     Nothing -> els
     _       -> onS
-  renderApiEvents =
-    "data Channel = Channel -- ChannelA | ChannelB"
+  renderApiEvents
+    | isJust (subscription lib)
+    = "data Channel = Channel -- ChannelA | ChannelB"
       <> "\n\n"
       <> "data Content = Content -- ContentA Int | ContentB String"
       <> "\n\n"
+    | otherwise
+    = "type ApiEvent = ()" <> double newline
   types = intercalate "\n\n" $ map renderFullType (allDataTypes lib)
    where
     renderFullType x = renderType cont x <> "\n\n" <> renderResolver cont x

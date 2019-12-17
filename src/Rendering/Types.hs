@@ -103,10 +103,10 @@ renderGQLScalar name =
 renderUnion :: Text -> [Text] -> Text
 renderUnion typeName = unionType . map renderElem
  where
-  renderElem name = renderUnionCon typeName name <> ("( " <> name <> " m)")
+  renderElem name = renderUnionCon typeName name <> ("(" <> name <> " m)")
 
 unionType :: [Text] -> Text
-unionType ls = "\n" <> indent <> intercalate ("\n" <> indent <> "| ") ls
+unionType ls = indent <> intercalate ("\n" <> indent <> "| ") ls
 
 renderObject :: (a -> (Text, Maybe Text)) -> [a] -> Text
 renderObject f list = intercalate "\n\n" $ renderMainType : catMaybes types

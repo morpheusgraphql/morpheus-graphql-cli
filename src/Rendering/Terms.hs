@@ -21,6 +21,8 @@ module Rendering.Terms
   , renderInstanceHead
   , renderGQLTypeInstance
   , renderTypeIntro
+  , newline
+  , double
   )
 where
 
@@ -39,6 +41,10 @@ import           Data.Morpheus.Types.Internal.AST
                                                 , Name
                                                 )
 
+
+double :: Text -> Text
+double x = x <> x
+
 ioRes :: Text -> Text
 ioRes event = "IORes " <> event <> " "
 
@@ -51,8 +57,12 @@ renderEqual key value = key <> " = " <> value
 renderReturn :: Text
 renderReturn = "return "
 
+newline :: Text
+newline = "\n"
+
 renderData :: Text -> [Text] -> Text
-renderData name tyArgs = "data " <> T.unwords (name : tyArgs) <> " = "
+renderData name tyArgs =
+  "data " <> T.unwords (name : tyArgs) <> " =" <> newline <> indent
 
 renderCon :: Text -> Text
 renderCon name = name <> " "
@@ -113,7 +123,7 @@ renderInstanceHead className name =
 
 renderDeriving :: [Text] -> Text
 renderDeriving list =
-  "  deriving " <> renderTuple (intercalate ", " ("Generic" : list))
+  " deriving " <> renderTuple (intercalate ", " ("Generic" : list))
 
 data Scope
   = Mutation

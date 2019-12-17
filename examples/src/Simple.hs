@@ -30,14 +30,13 @@ import           Data.Morpheus.Types            ( GQLRootResolver(..)
                                                 )
 import           Data.Text                      ( Text )
 
+type ApiEvent = ()
+
 rootResolver :: GQLRootResolver IO () Query Undefined Undefined
 rootResolver = GQLRootResolver { queryResolver        = resolveQuery
                                , mutationResolver     = Undefined
                                , subscriptionResolver = Undefined
                                }
-
-
-type ApiEvent = ()
 
 ---- GQL Query ------------------------------- 
 data Query (m :: * -> *) = Query
