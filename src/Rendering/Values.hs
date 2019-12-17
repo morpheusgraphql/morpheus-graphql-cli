@@ -22,6 +22,8 @@ import           Rendering.Terms                ( Context(..)
                                                 , renderUnionCon
                                                 , ioRes
                                                 , newline
+                                                , double
+                                                , indent
                                                 )
 import           Data.Morpheus.Types.Internal.AST
                                                 ( DataField(..)
@@ -32,6 +34,7 @@ import           Data.Morpheus.Types.Internal.AST
                                                 , TypeRef(..)
                                                 , TypeWrapper(..)
                                                 , Collection
+                                                , Name
                                                 )
 
 
@@ -43,51 +46,59 @@ class RenderValue a where
 
 instance RenderValue DataType where
   render cxt@Context { scope, pubSub = (channel, content) } DataType { typeName, typeContent }
-    = renderSig typeContent
+    = __render typeContent
    where
-    renderSig DataScalar{} =
-      defFunc <> renderReturn <> "$ " <> renderCon typeName <> "0 0"
-    renderSig (DataEnum enums) =
-      defFunc <> renderReturn <> renderCon (enumName $ head enums)
-    renderSig (DataUnion (member : _)) =
-      defFunc
+    __render DataScalar{} =
+      renderFunc False <> renderPure <> "$ " <> renderCon typeName <> "0 0"
+    __render (DataEnum enums) =
+      renderFunc False <> renderPure <> renderCon (enumName $ head enums)
+    __render (DataUnion (member : _)) =
+      renderFunc True
+        <> indent
         <> renderUnionCon typeName member
         <> " <$> "
         <> "resolve"
         <> member
-    renderSig (DataObject fields) =
-      defFunc <> renderReturn <> renderCon typeName <> renderObjFields
+    __render (DataObject fields) =
+      renderFunc True <> renderPure <> renderCon typeName <> renderObjFields
      where
       renderObjFields = renderResObject (map renderFieldRes fields)
-      renderFieldRes (key, field) = ( key, render cxt field)
-    renderSig _ = "" -- INPUT Types Does not Need Resolvers
+      renderFieldRes (key, field) = (key, render cxt field)
+    __render _ = "" -- INPUT Types Does not Need Resolvers
+    ------
+    renderPure | isOperation typeName = indent
+               | otherwise            = indent <> "pure "
     --------------------------------
-    defFunc = renderSignature <> renderFunc
-    ----------------------------------------------------------------------------------------------------------
-    renderSignature =
-      renderAssignment ("resolve" <> typeName) (renderMonad typeName) <> "\n"
-    ---------------------------------------------------------------------------------
-    renderMonad "Mutation" =
-      "IOMutRes " <> channel <> " " <> content <> " Mutation"
-    renderMonad "Subscription" = "SubRootRes IO " <> channel <> " Subscription"
-    renderMonad tName          = ioRes channel <> tName
-    ----------------------------------------------------------------------------------------------------------
-    renderFunc = "resolve" <> typeName <> " = "
-      ---------------------------------------
+    renderFunc x = funcSig x <> funcName <> "= " <> newline
+    funcName = "resolve" <> typeName <> " "
+    funcSig :: Bool -> Text
+    funcSig isOutput
+      | isOutput  = __renderSig $ "(" <> typeName <> " ApiRes" <> ")"
+      | otherwise = __renderSig typeName
+     where
+      __renderSig x = renderAssignment funcName (monadSig <> x) <> newline
+      ---------------------------------------------------------------------------------
+      monadSig | isOperation typeName = ""
+               | otherwise            = "ApiRes "
 
+isOperation :: Name -> Bool
+isOperation name = name `elem` operationNames
 
-instance RenderValue DataField where 
-  render cxt@Context { scope, pubSub = (channel, content) } DataField {fieldType} = 
-      "const " <> withScope scope (render cxt fieldType)
-    where
-      withScope Subscription x =
-        "$ Event { channels = [Channel], content = const " <> x <> " }"
-      withScope Mutation x = case (channel, content) of
-        ("()", "()") -> x
-        _ ->
-          "$ toMutResolver [Event {channels = [Channel], content = Content}] "
-            <> x
-      withScope _ x = x
+operationNames :: [Name]
+operationNames = ["Mutation", "Subscription", "Query"]
+
+instance RenderValue DataField where
+  render cxt@Context { scope, pubSub = (channel, content) } DataField { fieldType }
+    = "const " <> withScope scope (render cxt fieldType)
+   where
+    withScope Subscription x =
+      "$ Event { channels = [Channel], content = const " <> x <> " }"
+    withScope Mutation x = case (channel, content) of
+      ("()", "()") -> x
+      _ ->
+        "$ toMutResolver [Event {channels = [Channel], content = Content}] "
+          <> x
+    withScope _ x = x
 
 instance RenderValue TypeRef where
   render _ TypeRef { typeWrappers, typeConName } = renderValue typeWrappers

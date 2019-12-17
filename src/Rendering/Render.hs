@@ -43,6 +43,7 @@ renderHaskellDocument modName lib =
     <> renderExports context
     <> renderImports context
     <> renderApiEvents
+    <> apiRes
     <> renderRootResolver context lib
     <> types
  where
@@ -50,12 +51,17 @@ renderHaskellDocument modName lib =
   onSub onS els = case subscription lib of
     Nothing -> els
     _       -> onS
+  apiRes :: Text
+  apiRes = "type ApiRes = IORes ApiEvent" <> double newline
+  renderApiEvents :: Text
   renderApiEvents
     | isJust (subscription lib)
     = "data Channel = Channel -- ChannelA | ChannelB"
       <> "\n\n"
       <> "data Content = Content -- ContentA Int | ContentB String"
       <> "\n\n"
+      <> "type ApiEvent = Event Channel Content"
+      <> double newline
     | otherwise
     = "type ApiEvent = ()" <> double newline
   types = intercalate "\n\n" $ map renderFullType (allDataTypes lib)
@@ -96,7 +102,7 @@ renderHaskellDocument modName lib =
                    ]
     , scope      = Query
     , pubSub     = onSub ("Channel", "Content") ("()", "()")
-    , schema = lib
+    , schema     = lib
     }
 
 renderLanguageExtensions :: Context -> Text
