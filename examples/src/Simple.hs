@@ -46,12 +46,14 @@ data Query (m :: * -> *) =
   Query
     { deity :: ArgDeity -> m (Deity m)
   ,  character :: ArgCharacter -> m (Character m)
-    } deriving (Generic, GQLType)
+    }
+ deriving (Generic, GQLType)
 
 newtype ArgDeity =
   ArgDeity
     { name :: Maybe [Maybe [Maybe [[Maybe [Text]]]]]
-    } deriving (Generic)
+    }
+ deriving (Generic)
 
 data ArgCharacter =
   ArgCharacter
@@ -60,7 +62,7 @@ data ArgCharacter =
     }
  deriving (Generic)
 
-resolveQuery :: Query ApiRes
+resolveQuery :: (Query ApiRes)
 resolveQuery =
   Query { deity = const resolveDeity, character = const resolveCharacter }
 
@@ -74,8 +76,7 @@ data Deity (m :: * -> *) =
 
 resolveDeity :: ApiRes (Deity ApiRes)
 resolveDeity =
-  return Deity { fullName = const $ return "", power = const $ return Nothing }
-
+  pure Deity { fullName = const $ pure "", power = const $ return Nothing }
 
 ---- GQL City ------------------------------- 
 data City =
@@ -89,12 +90,11 @@ instance GQLType City where
   type KIND City = ENUM
 
 resolveCity :: ApiRes City
-resolveCity = return Athens
+resolveCity = pure Athens
 
 ---- GQL Power ------------------------------- 
 data Power =
   Power Int Int
-
 instance GQLScalar  Power where
   parseValue _ = pure (Power 0 0)
   serialize (Power x y) = Int (x + y)
@@ -102,9 +102,8 @@ instance GQLScalar  Power where
 instance GQLType Power where
   type KIND Power = SCALAR
 
-
-resolvePower :: IORes () Power
-resolvePower = return $ Power 0 0
+resolvePower :: ApiRes Power
+resolvePower = pure $ Power 0 0
 
 ---- GQL Creature ------------------------------- 
 data Creature (m :: * -> *) =
@@ -116,10 +115,10 @@ data Creature (m :: * -> *) =
  deriving (Generic, GQLType)
 
 resolveCreature :: ApiRes (Creature ApiRes)
-resolveCreature = return Creature { creatureName = const $ return ""
-                                  , realm        = const resolveCity
-                                  , immortality  = const $ pure False
-                                  }
+resolveCreature = pure Creature { creatureName = const $ pure ""
+                                , realm        = const resolveCity
+                                , immortality  = const $ pure False
+                                }
 
 ---- GQL Character ------------------------------- 
 data Character (m :: * -> *) =

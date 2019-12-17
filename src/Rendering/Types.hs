@@ -75,8 +75,9 @@ getKind lib name =
   kindOf <$> lookupType ("type " <> name <> "not found") (allDataTypes lib) name
 
 instance RenderType DataType where
-  render context DataType { typeContent, typeName } =
-    (renderTypeIntro typeName <>) <$> renderT typeContent
+  render context DataType { typeContent, typeName } = do
+    typeDef <- renderT typeContent
+    pure $ renderTypeIntro typeName <> typeDef <> newline
    where
     renderT (DataScalar _) =
       pure
@@ -113,7 +114,7 @@ renderGQLScalar name =
     <> renderInstanceHead "GQLScalar " name
     <> renderParse
     <> renderSerialize
-    <> "\n\n"
+    <> newline
  where
   renderParse = indent <> "parseValue _ = pure (" <> name <> " 0 0 )" <> "\n"
   renderSerialize = indent <> "serialize (" <> name <> " x y ) = Int (x + y)"

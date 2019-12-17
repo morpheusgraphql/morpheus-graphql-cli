@@ -64,9 +64,9 @@ renderHaskellDocument modName lib =
       <> double newline
     | otherwise
     = "type ApiEvent = ()" <> double newline
-  types = intercalate "\n\n" $ map renderFullType (allDataTypes lib)
+  types = intercalate newline $ map renderFullType (allDataTypes lib)
    where
-    renderFullType x = renderType cont x <> "\n\n" <> renderResolver cont x
+    renderFullType x = renderType cont x <> newline <> renderResolver cont x
      where
       cont = context { scope = getScope $ fst x }
       getScope "Mutation"     = Mutation
