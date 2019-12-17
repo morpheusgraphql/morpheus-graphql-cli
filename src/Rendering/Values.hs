@@ -77,7 +77,8 @@ instance RenderValue DataType where
 
 
 instance RenderValue DataField where 
-  render (key, DataField {fieldType}) = "const " <> withScope scope (render cxt fieldType)
+  render cxt@Context { scope, pubSub = (channel, content) } DataField {fieldType} = 
+      "const " <> withScope scope (render cxt fieldType)
     where
       withScope Subscription x =
         "$ Event { channels = [Channel], content = const " <> x <> " }"
