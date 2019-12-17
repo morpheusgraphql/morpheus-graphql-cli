@@ -47,38 +47,45 @@ import           Data.Morpheus.Types.Internal.AST
 
 
 renderType :: Context -> (Text, DataType) -> Text
-renderType context (_, datatype) = render context datatype
+renderType context (_, datatype) = case render context datatype of
+  Right x -> x
 
 class RenderType a where
-    render :: Context -> a -> Text
+    render :: Context -> a -> Either String Text
 
 instance RenderType DataType where
-  render context DataType { typeContent, typeName } = renderTypeIntro typeName
-    <> renderT typeContent
+  render context DataType { typeContent, typeName } =
+    (renderTypeIntro typeName <>) <$> renderT typeContent
    where
     renderT (DataScalar _) =
-      renderData typeName []
+      pure
+        $  renderData typeName []
         <> renderCon typeName
         <> "Int Int"
         <> renderGQLScalar typeName
         <> renderGQLTypeInstance typeName "SCALAR"
     renderT (DataEnum enums) =
-      renderData typeName []
+      pure
+        $  renderData typeName []
         <> unionType (map enumName enums)
         <> renderGQLTypeInstance typeName "ENUM"
     renderT (DataInputObject fields) =
-      renderData typeName []
+      pure
+        $  renderData typeName []
         <> renderCon typeName
         <> renderObject renderInputField fields
         <> renderGQLTypeInstance typeName "INPUT"
     renderT (DataUnion members) =
-      renderData typeName [] <> renderUnion typeName members <> renderDeriving
-        ["GQLType"]
+      pure
+        $  renderData typeName []
+        <> renderUnion typeName members
+        <> renderDeriving ["GQLType"]
     renderT (DataObject fields) =
-      renderData typeName ["m"]
+      pure
+        $  renderData typeName ["m"]
         <> renderCon typeName
         <> renderObject (renderField context) fields
-    renderT (DataInputUnion _) = "\n -- Error: Input Union Not Supported"
+    renderT (DataInputUnion _) = Left "Input Union Not Supported"
 
 renderGQLScalar :: Text -> Text
 renderGQLScalar name =
