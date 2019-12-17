@@ -32,6 +32,7 @@ import           Rendering.Terms                ( Context(..)
                                                 , ioRes
                                                 , renderDeriving
                                                 , renderInstanceHead
+                                                , renderGQLTypeInstance
                                                 )
 import           Data.Morpheus.Types.Internal.AST
                                                 ( DataArgument
@@ -58,40 +59,32 @@ instance RenderType DataType where
       renderData typeName []
         <> renderCon typeName
         <> "Int Int"
-        <> defineTypeClass "SCALAR"
         <> renderGQLScalar typeName
+        <> defineTypeClass "SCALAR"
     renderT (DataEnum enums) =
       renderData typeName []
         <> unionType (map enumName enums)
         <> defineTypeClass "ENUM"
     renderT (DataUnion members) =
-      renderData typeName [] <> renderUnion typeName members <> defineTypeClass
-        "UNION"
+      renderData typeName [] <> renderUnion typeName members <> renderDeriving
+        ["GQLType"]
     renderT (DataInputObject fields) =
       renderData typeName []
         <> renderCon typeName
         <> renderObject renderInputField fields
-        <> defineTypeClass "INPUT_OBJECT"
+        <> defineTypeClass "INPUT"
     renderT (DataObject fields) =
       renderData typeName ["m"]
         <> renderCon typeName
         <> renderObject (renderField context) fields
-        <> defineTypeClass "OBJECT"
     renderT (DataInputUnion _) = "\n -- Error: Input Union Not Supported"
+    ----------------
+    defineTypeClass = renderGQLTypeInstance typeName
     ----------------------------------------------------------------------------------------------------------
     typeIntro =
       "\n\n---- GQL " <> typeName <> " ------------------------------- \n"
-    ----------------------------------------------------------------------------------------------------------
-    defineTypeClass kind =
-      "\n\n"
-        <> renderInstanceHead "GQLType" typeName
-        <> indent
-        <> "type KIND "
-        <> typeName
-        <> " = "
-        <> kind
-        <> "\n\n"
-        ----------------------------------------------------------------------------------------------------------
+
+
 
 
 renderGQLScalar :: Text -> Text
@@ -108,11 +101,8 @@ renderUnion :: Text -> [Text] -> Text
 renderUnion typeName = unionType . map renderElem
   where renderElem name = renderUnionCon typeName name <> name
 
-
-
 unionType :: [Text] -> Text
-unionType ls =
-  "\n" <> indent <> intercalate ("\n" <> indent <> "| ") ls <> renderDeriving []
+unionType ls = "\n" <> indent <> intercalate ("\n" <> indent <> "| ") ls
 
 renderObject :: (a -> (Text, Maybe Text)) -> [a] -> Text
 renderObject f list = intercalate "\n\n" $ renderMainType : catMaybes types

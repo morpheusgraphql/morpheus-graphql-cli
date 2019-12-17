@@ -19,6 +19,7 @@ module Rendering.Terms
   , ioRes
   , renderDeriving
   , renderInstanceHead
+  , renderGQLTypeInstance
   )
 where
 
@@ -33,7 +34,9 @@ import qualified Data.Text                     as T
 
 -- MORPHEUS
 import           Data.Morpheus.Types.Internal.AST
-                                                ( TypeWrapper(..) )
+                                                ( TypeWrapper(..)
+                                                , Name
+                                                )
 
 ioRes :: Text -> Text
 ioRes event = "IORes " <> event <> " "
@@ -87,6 +90,18 @@ renderUnionCon typeName conName =
   renderCon (typeName <> "_" <> toUpper conName)
 
 
+renderGQLTypeInstance :: Name -> Name -> Text
+renderGQLTypeInstance typeName kind =
+  "\n\n"
+    <> renderInstanceHead "GQLType" typeName
+    <> indent
+    <> "type KIND "
+    <> typeName
+    <> " = "
+    <> kind
+    <> "\n\n"
+        ----------------------------------------------------------------------------------------------------------
+
 
 renderInstanceHead :: Text -> Text -> Text
 renderInstanceHead className name =
@@ -94,7 +109,8 @@ renderInstanceHead className name =
 
 
 renderDeriving :: [Text] -> Text
-renderDeriving list = "deriving " <> renderTuple (T.unwords ("Generic" : list))
+renderDeriving list =
+  "\n  deriving " <> renderTuple (intercalate ", " ("Generic" : list))
 
 data Scope
   = Mutation
