@@ -83,12 +83,12 @@ renderWrapped (TypeMaybe : xs) = renderMaybe . renderWrapped xs
 renderWrapped []               = strToText
 
 strToText :: Text -> Text
-strToText "String" = "Text"
-strToText x        = x
+strToText "String"  = "Text"
+strToText "Boolean" = "Bool"
+strToText x         = x
 
 renderUnionCon :: Text -> Text -> Text
-renderUnionCon typeName conName =
-  renderCon (typeName <> "_" <> toUpper conName)
+renderUnionCon typeName conName = renderCon (typeName <> conName)
 
 
 renderGQLTypeInstance :: Name -> Name -> Text

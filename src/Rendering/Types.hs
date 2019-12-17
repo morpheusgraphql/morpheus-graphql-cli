@@ -77,7 +77,7 @@ instance RenderType DataType where
         <> renderGQLTypeInstance typeName "INPUT"
     renderT (DataUnion members) =
       pure
-        $  renderData typeName []
+        $  renderData typeName ["m"]
         <> renderUnion typeName members
         <> renderDeriving ["GQLType"]
     renderT (DataObject fields) =
@@ -89,7 +89,8 @@ instance RenderType DataType where
 
 renderGQLScalar :: Text -> Text
 renderGQLScalar name =
-  renderInstanceHead "GQLScalar " name
+  "\n"
+    <> renderInstanceHead "GQLScalar " name
     <> renderParse
     <> renderSerialize
     <> "\n\n"
@@ -99,7 +100,7 @@ renderGQLScalar name =
 
 renderUnion :: Text -> [Text] -> Text
 renderUnion typeName = unionType . map renderElem
-  where renderElem name = renderUnionCon typeName name <> name
+  where renderElem name = renderUnionCon typeName name <> (name <> " m")
 
 unionType :: [Text] -> Text
 unionType ls = "\n" <> indent <> intercalate ("\n" <> indent <> "| ") ls
