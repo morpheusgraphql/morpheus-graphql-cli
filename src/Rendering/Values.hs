@@ -21,6 +21,7 @@ import           Rendering.Terms                ( Context(..)
                                                 , renderSet
                                                 , renderUnionCon
                                                 , ioRes
+                                                , newline
                                                 )
 import           Data.Morpheus.Types.Internal.AST
                                                 ( DataField(..)
@@ -34,7 +35,7 @@ import           Data.Morpheus.Types.Internal.AST
 
 renderRootResolver :: Context -> DataTypeLib -> Text
 renderRootResolver Context { pubSub = (channel, _) } DataTypeLib { mutation, subscription }
-  = renderSignature <> renderBody <> "\n\n"
+  = renderSignature <> renderBody
  where
   renderSignature = "rootResolver :: " <> renderRootSig <> "\n"
    where

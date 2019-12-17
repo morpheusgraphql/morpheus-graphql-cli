@@ -114,7 +114,7 @@ renderGQLTypeInstance typeName kind =
 
 renderTypeIntro :: Name -> Text
 renderTypeIntro typeName =
-  "\n--- GQL " <> typeName <> " ------------------------------- \n"
+  "\n---- GQL " <> typeName <> " ------------------------------- \n"
 
 renderInstanceHead :: Text -> Text -> Text
 renderInstanceHead className name =
