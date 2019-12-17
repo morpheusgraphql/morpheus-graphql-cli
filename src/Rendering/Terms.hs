@@ -39,6 +39,7 @@ import qualified Data.Text                     as T
 import           Data.Morpheus.Types.Internal.AST
                                                 ( TypeWrapper(..)
                                                 , Name
+                                                , DataTypeLib
                                                 )
 
 
@@ -136,4 +137,5 @@ data Context = Context
   , extensions :: [Text]
   , scope      :: Scope
   , pubSub     :: (Text, Text)
+  , schema :: DataTypeLib
   }

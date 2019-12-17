@@ -9,6 +9,7 @@ module Simple
   )
 where
 
+import           Data.Typeable                  ( Typeable )
 import           GHC.Generics                   ( Generic )
 import           Data.Morpheus.Kind             ( SCALAR
                                                 , ENUM
@@ -32,6 +33,8 @@ import           Data.Text                      ( Text )
 
 type ApiEvent = ()
 
+type ApiRes = IORes ApiEvent
+
 rootResolver :: GQLRootResolver IO () Query Undefined Undefined
 rootResolver = GQLRootResolver { queryResolver        = resolveQuery
                                , mutationResolver     = Undefined
@@ -41,85 +44,86 @@ rootResolver = GQLRootResolver { queryResolver        = resolveQuery
 ---- GQL Query ------------------------------- 
 data Query (m :: * -> *) =
   Query
-    {   deity :: ArgDeity -> m (Deity m)
-      , character :: ArgCharacter -> m (Character m)
+    { deity :: ArgDeity -> m (Deity m)
+  ,  character :: ArgCharacter -> m (Character m)
     }
- deriving (Generic, GQLType)
 
 newtype ArgDeity =
   ArgDeity
     { name :: Maybe [Maybe [Maybe [[Maybe [Text]]]]]
     }
- deriving (Generic)
 
 data ArgCharacter =
   ArgCharacter
-    {  characterID :: Text
-    ,  age :: Maybe Int
+    { characterID :: Text
+  ,  age :: Maybe Int
     }
- deriving (Generic)
+ deriving (Generic, GQLType)
 
-resolveQuery :: Query (IORes ApiEvent)
+resolveQuery :: Query ApiRes
 resolveQuery =
   Query { deity = const resolveDeity, character = const resolveCharacter }
 
 ---- GQL Deity ------------------------------- 
 data Deity (m :: * -> *) =
   Deity
-    {  fullName :: () -> m Text
-    ,  power :: () -> m (Maybe Power)
+    { fullName :: () -> m Text
+  ,  power :: () -> m (Maybe Power)
     }
  deriving (Generic, GQLType)
 
-resolveDeity :: ResolveQ ApiEvent IO Deity
+resolveDeity :: ApiRes (Deity ApiRes)
 resolveDeity =
   return Deity { fullName = const $ return "", power = const $ return Nothing }
 
 
 ---- GQL City ------------------------------- 
 data City =
-  Athens
+    Athens
   | Ithaca
   | Sparta
-  | Troy deriving (Generic)
+  | Troy
 
 instance GQLType City where
   type KIND City = ENUM
 
-resolveCity :: IORes ApiEvent City
+resolveCity :: ApiRes City
 resolveCity = return Athens
 
 ---- GQL Power ------------------------------- 
-data Power = Power Int Int
-
-instance GQLType Power where
-  type KIND Power = SCALAR
+data Power =
+  Power Int Int
 
 instance GQLScalar  Power where
   parseValue _ = pure (Power 0 0)
   serialize (Power x y) = Int (x + y)
 
-resolvePower :: IORes ApiEvent Power
+instance GQLType Power where
+  type KIND Power = SCALAR
+
+
+resolvePower :: IORes () Power
 resolvePower = return $ Power 0 0
 
 ---- GQL Creature ------------------------------- 
-data Creature (m :: * -> *) = Creature
+data Creature (m :: * -> *) =
+  Creature
     { creatureName :: () -> m Text
   ,  realm :: () -> m City
   ,  immortality :: () -> m Bool
     }
  deriving (Generic, GQLType)
 
-resolveCreature :: ResolveQ ApiEvent IO Creature
-resolveCreature = return Creature { creatureName = const $ pure ""
+resolveCreature :: ApiRes (Creature ApiRes)
+resolveCreature = return Creature { creatureName = const $ return ""
                                   , realm        = const resolveCity
                                   , immortality  = const $ pure False
                                   }
 
 ---- GQL Character ------------------------------- 
 data Character (m :: * -> *) =
-  CharacterCreature (Creature m)
+    CharacterCreature (Creature m)
   | CharacterDeity (Deity m) deriving (Generic, GQLType)
 
-resolveCharacter :: ResolveQ ApiEvent IO Character
+resolveCharacter :: ApiRes (Character ApiRes)
 resolveCharacter = CharacterCreature <$> resolveCreature

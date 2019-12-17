@@ -96,6 +96,7 @@ renderHaskellDocument modName lib =
                    ]
     , scope      = Query
     , pubSub     = onSub ("Channel", "Content") ("()", "()")
+    , schema = lib
     }
 
 renderLanguageExtensions :: Context -> Text

@@ -12,6 +12,7 @@ import           Data.Text                      ( Text
                                                 , intercalate
                                                 , pack
                                                 , toUpper
+                                                , unpack
                                                 )
 import qualified Data.Text                     as T
                                                 ( head
@@ -43,15 +44,33 @@ import           Data.Morpheus.Types.Internal.AST
                                                 , TypeRef(..)
                                                 , isNullable
                                                 , DataEnumValue(..)
+                                                , lookupType
+                                                , Name
+                                                , DataTypeLib
+                                                , allDataTypes
+                                                , kindOf
+                                                , DataTypeKind(..)
+                                                , isOutputObject
                                                 )
 
 
 renderType :: Context -> (Text, DataType) -> Text
 renderType context (_, datatype) = case render context datatype of
   Right x -> x
+  Left  x -> error (unpack x)
+
+type Result = Either Text
 
 class RenderType a where
-    render :: Context -> a -> Either String Text
+    render :: Context -> a -> Result Text
+
+getKind :: DataTypeLib -> Name -> Result DataTypeKind
+getKind _ "String"  = pure KindScalar
+getKind _ "Boolean" = pure KindScalar
+getKind _ "int"     = pure KindScalar
+getKind _ "Float"   = pure KindScalar
+getKind lib name =
+  kindOf <$> lookupType ("type " <> name <> "not found") (allDataTypes lib) name
 
 instance RenderType DataType where
   render context DataType { typeContent, typeName } =
@@ -76,11 +95,12 @@ instance RenderType DataType where
         <> renderObject renderInputField fields
         <> renderDeriving []
         <> renderGQLTypeInstance typeName "INPUT"
-    renderT (DataObject fields) =
+    renderT (DataObject fields) = do
+      body <- renderResObject (renderField context) fields
       pure
         $  renderData typeName ["(m :: * -> *)"]
         <> renderCon typeName
-        <> renderObject (renderField context) fields
+        <> body
         <> renderDeriving ["GQLType"]
     renderT (DataUnion members) =
       pure
@@ -108,6 +128,11 @@ renderUnion typeName = unionType . map renderElem
 unionType :: [Text] -> Text
 unionType ls = indent <> intercalate ("\n" <> indent <> "| ") ls
 
+renderResObject :: Monad m => (a -> m (Text, Maybe Text)) -> [a] -> m Text
+renderResObject f list = do
+  (fields, types) <- unzip <$> traverse f list
+  pure $ intercalate "\n\n" $ renderSet fields : catMaybes types
+
 renderObject :: (a -> (Text, Maybe Text)) -> [a] -> Text
 renderObject f list = intercalate "\n\n" $ renderMainType : catMaybes types
  where
@@ -118,14 +143,21 @@ renderInputField :: (Text, DataField) -> (Text, Maybe Text)
 renderInputField (key, DataField { fieldType = TypeRef { typeConName, typeWrappers } })
   = (key `renderAssignment` renderWrapped typeWrappers typeConName, Nothing)
 
-renderField :: Context -> (Text, DataField) -> (Text, Maybe Text)
-renderField Context { pubSub = (channel, content) } (key, DataField { fieldType = tyRef@TypeRef { typeConName, typeWrappers }, fieldArgs })
-  = (key `renderAssignment` argTypeName <> " -> m " <> result, argTypes)
+
+renderField :: Context -> (Text, DataField) -> Result (Text, Maybe Text)
+renderField Context { schema } (key, DataField { fieldType = tyRef@TypeRef { typeConName, typeWrappers }, fieldArgs })
+  = do
+    kind <- getKind schema typeConName
+    pure
+      (key `renderAssignment` argTypeName <> " -> m " <> result kind, argTypes)
  where
-  -----------------------------------------------------------------
-  result
-    | isNullable tyRef = renderTuple (renderWrapped typeWrappers typeConName)
-    | otherwise        = renderWrapped typeWrappers typeConName
+  result :: DataTypeKind -> Text
+  result kind | isNullable tyRef = renderTuple namedType
+              | otherwise        = namedType
+   where
+    tName = renderWrapped typeWrappers typeConName
+    namedType | KindUnion == kind || isOutputObject kind = "(" <> tName <> " m)"
+              | otherwise = tName
   (argTypeName, argTypes) = renderArguments fieldArgs
   renderArguments :: [(Text, DataArgument)] -> (Text, Maybe Text)
   renderArguments [] = ("()", Nothing)
@@ -142,3 +174,4 @@ renderField Context { pubSub = (channel, content) } (key, DataField { fieldType 
     camelCase :: Text -> Text
     camelCase ""   = ""
     camelCase text = toUpper (pack [T.head text]) <> T.tail text
+
