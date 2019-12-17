@@ -82,7 +82,7 @@ instance RenderType DataType where
     defineTypeClass = renderGQLTypeInstance typeName
     ----------------------------------------------------------------------------------------------------------
     typeIntro =
-      "\n\n---- GQL " <> typeName <> " ------------------------------- \n"
+      "\n--- GQL " <> typeName <> " ------------------------------- \n"
 
 
 
