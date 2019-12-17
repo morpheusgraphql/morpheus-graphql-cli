@@ -35,6 +35,8 @@ import           Rendering.Terms                ( Context(..)
                                                 , renderInstanceHead
                                                 , renderGQLTypeInstance
                                                 , renderTypeIntro
+                                                , double
+                                                , newline
                                                 )
 import           Data.Morpheus.Types.Internal.AST
                                                 ( DataArgument
@@ -128,7 +130,7 @@ renderResObject :: Context -> [(Name, DataField)] -> Result Text
 renderResObject context list = do
   (fields, arguments) <- unzip <$> traverse (renderField context) list
   pure
-    $ intercalate "\n\n"
+    $ intercalate (double newline)
     $ (renderSet fields <> renderDeriving ["GQLType"])
     : catMaybes arguments
 
