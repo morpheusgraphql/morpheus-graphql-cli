@@ -46,19 +46,19 @@ data Query (m :: * -> *) =
   Query
     { deity :: ArgDeity -> m (Deity m)
   ,  character :: ArgCharacter -> m (Character m)
-    }
+    } deriving (Generic, GQLType)
 
 newtype ArgDeity =
   ArgDeity
     { name :: Maybe [Maybe [Maybe [[Maybe [Text]]]]]
-    }
+    } deriving (Generic)
 
 data ArgCharacter =
   ArgCharacter
     { characterID :: Text
   ,  age :: Maybe Int
     }
- deriving (Generic, GQLType)
+ deriving (Generic)
 
 resolveQuery :: Query ApiRes
 resolveQuery =
@@ -83,6 +83,7 @@ data City =
   | Ithaca
   | Sparta
   | Troy
+  deriving (Generic)
 
 instance GQLType City where
   type KIND City = ENUM
