@@ -42,7 +42,7 @@ class RenderValue a where
   render :: Context -> a -> Text
 
 instance RenderValue DataType where
-  render Context { scope, pubSub = (channel, content) } DataType { typeName, typeContent }
+  render cxt@Context { scope, pubSub = (channel, content) } DataType { typeName, typeContent }
     = renderSig typeContent
    where
     renderSig DataScalar{} =
@@ -59,27 +59,7 @@ instance RenderValue DataType where
       defFunc <> renderReturn <> renderCon typeName <> renderObjFields
      where
       renderObjFields = renderResObject (map renderFieldRes fields)
-      renderFieldRes (key, DataField { fieldType = TypeRef { typeWrappers, typeConName } })
-        = ( key
-          , "const " <> withScope scope (renderValue typeWrappers typeConName)
-          )
-       where
-        renderValue (TypeMaybe : _) = const $ "$ " <> renderReturn <> "Nothing"
-        renderValue (TypeList  : _) = const $ "$ " <> renderReturn <> "[]"
-        renderValue []              = fieldValue
-        ----------------------------------------------------------------------------
-        fieldValue "String" = "$ return \"\""
-        fieldValue "Int"    = "$ return 0"
-        fieldValue fName    = "resolve" <> fName
-        -------------------------------------------
-        withScope Subscription x =
-          "$ Event { channels = [Channel], content = const " <> x <> " }"
-        withScope Mutation x = case (channel, content) of
-          ("()", "()") -> x
-          _ ->
-            "$ toMutResolver [Event {channels = [Channel], content = Content}] "
-              <> x
-        withScope _ x = x
+      renderFieldRes (key, field) = ( key, render cxt field)
     renderSig _ = "" -- INPUT Types Does not Need Resolvers
     --------------------------------
     defFunc = renderSignature <> renderFunc
@@ -96,16 +76,29 @@ instance RenderValue DataType where
       ---------------------------------------
 
 
+instance RenderValue DataField where 
+  render (key, DataField {fieldType}) = "const " <> withScope scope (render cxt fieldType)
+    where
+      withScope Subscription x =
+        "$ Event { channels = [Channel], content = const " <> x <> " }"
+      withScope Mutation x = case (channel, content) of
+        ("()", "()") -> x
+        _ ->
+          "$ toMutResolver [Event {channels = [Channel], content = Content}] "
+            <> x
+      withScope _ x = x
+
 instance RenderValue TypeRef where
-  render cxt TypeRef { typeWrappers, typeConName } = renderValue typeWrappers
+  render _ TypeRef { typeWrappers, typeConName } = renderValue typeWrappers
    where
     renderValue (TypeMaybe : _) = "$ " <> renderReturn <> "Nothing"
     renderValue (TypeList  : _) = "$ " <> renderReturn <> "[]"
     renderValue []              = renderName typeConName
     ---------------------------------------------------
-    renderName "String"  = "$ return \"\""
-    renderName "Int"     = "$ return 0"
-    renderName "Boolean" = "False"
+    renderName "String"  = "$ pure \"\""
+    renderName "Int"     = "$ pure 0"
+    renderName "Float"   = "$ pure 0"
+    renderName "Boolean" = "$ pure False"
     renderName fName     = "resolve" <> fName
 
 
