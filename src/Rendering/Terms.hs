@@ -113,7 +113,7 @@ renderInstanceHead className name =
 
 renderDeriving :: [Text] -> Text
 renderDeriving list =
-  "\n  deriving " <> renderTuple (intercalate ", " ("Generic" : list))
+  "  deriving " <> renderTuple (intercalate ", " ("Generic" : list))
 
 data Scope
   = Mutation

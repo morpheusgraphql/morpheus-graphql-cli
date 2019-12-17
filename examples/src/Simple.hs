@@ -116,7 +116,7 @@ resolveCreature = return Creature { creatureName = const $ pure ""
 ---- GQL Character ------------------------------- 
 data Character (m :: * -> *) =
   CharacterCreature (Creature m)
-  | CharacterDeity (Deity m) deriving (Generic,GQLType)
+  | CharacterDeity (Deity m) deriving (Generic, GQLType)
 
 resolveCharacter :: ResolveQ ApiEvent IO Character
 resolveCharacter = CharacterCreature <$> resolveCreature

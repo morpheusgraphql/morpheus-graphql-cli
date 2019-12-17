@@ -76,16 +76,16 @@ instance RenderType DataType where
         <> renderObject renderInputField fields
         <> renderDeriving []
         <> renderGQLTypeInstance typeName "INPUT"
-    renderT (DataUnion members) =
-      pure
-        $  renderData typeName ["(m :: * -> *)"]
-        <> renderUnion typeName members
-        <> renderDeriving ["GQLType"]
     renderT (DataObject fields) =
       pure
         $  renderData typeName ["(m :: * -> *)"]
         <> renderCon typeName
         <> renderObject (renderField context) fields
+        <> renderDeriving ["GQLType"]
+    renderT (DataUnion members) =
+      pure
+        $  renderData typeName ["(m :: * -> *)"]
+        <> renderUnion typeName members
         <> renderDeriving ["GQLType"]
     renderT (DataInputUnion _) = Left "Input Union Not Supported"
 
