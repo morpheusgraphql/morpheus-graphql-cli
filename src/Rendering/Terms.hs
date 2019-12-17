@@ -104,14 +104,13 @@ renderUnionCon typeName conName = renderCon (typeName <> conName)
 
 renderGQLTypeInstance :: Name -> Name -> Text
 renderGQLTypeInstance typeName kind =
-  "\n\n"
-    <> renderInstanceHead "GQLType" typeName
+  renderInstanceHead "GQLType" typeName
     <> indent
     <> "type KIND "
     <> typeName
     <> " = "
     <> kind
-    <> "\n\n"
+    <> newline
 
 renderTypeIntro :: Name -> Text
 renderTypeIntro typeName =
@@ -124,7 +123,7 @@ renderInstanceHead className name =
 
 renderDeriving :: [Text] -> Text
 renderDeriving list =
-  " deriving " <> renderTuple (intercalate ", " ("Generic" : list))
+  " deriving " <> renderTuple (intercalate ", " ("Generic" : list)) <> newline
 
 data Scope
   = Mutation

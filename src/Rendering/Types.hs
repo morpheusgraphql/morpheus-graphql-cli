@@ -75,21 +75,23 @@ getKind lib name =
   kindOf <$> lookupType ("type " <> name <> "not found") (allDataTypes lib) name
 
 instance RenderType DataType where
-  render context DataType { typeContent, typeName } = do
-    typeDef <- renderT typeContent
-    pure $ renderTypeIntro typeName <> typeDef <> newline
+  render context DataType { typeContent, typeName } =
+    (renderTypeIntro typeName <>) <$> renderT typeContent
    where
     renderT (DataScalar _) =
       pure
         $  renderData typeName []
         <> renderCon typeName
         <> "Int Int"
+        <> double newline
         <> renderGQLScalar typeName
+        <> newline
         <> renderGQLTypeInstance typeName "SCALAR"
     renderT (DataEnum enums) =
       pure
         $  renderData typeName []
         <> unionType (map enumName enums)
+        <> newline
         <> renderDeriving []
         <> renderGQLTypeInstance typeName "ENUM"
     renderT (DataInputObject fields) =
@@ -110,14 +112,12 @@ instance RenderType DataType where
 
 renderGQLScalar :: Text -> Text
 renderGQLScalar name =
-  "\n"
-    <> renderInstanceHead "GQLScalar " name
-    <> renderParse
-    <> renderSerialize
-    <> newline
+  renderInstanceHead "GQLScalar " name <> renderParse <> renderSerialize
  where
-  renderParse = indent <> "parseValue _ = pure (" <> name <> " 0 0 )" <> "\n"
-  renderSerialize = indent <> "serialize (" <> name <> " x y ) = Int (x + y)"
+  renderParse =
+    indent <> "parseValue _ = pure (" <> name <> " 0 0 )" <> newline
+  renderSerialize =
+    indent <> "serialize (" <> name <> " x y ) = Int (x + y)" <> newline
 
 renderUnion :: Text -> [Text] -> Text
 renderUnion typeName = unionType . map renderElem
