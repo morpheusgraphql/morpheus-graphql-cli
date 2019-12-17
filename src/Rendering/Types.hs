@@ -43,45 +43,55 @@ import           Data.Morpheus.Types.Internal.AST
                                                 , DataEnumValue(..)
                                                 )
 
+
 renderType :: Context -> (Text, DataType) -> Text
-renderType context (name, DataType { typeContent }) = typeIntro
-  <> renderT typeContent
- where
-  renderT (DataScalar _) =
-    renderData name []
-      <> renderCon name
-      <> "Int Int"
-      <> defineTypeClass "SCALAR"
-      <> renderGQLScalar name
-  renderT (DataEnum enums) =
-    renderData name [] <> unionType (map enumName enums) <> defineTypeClass
-      "ENUM"
-  renderT (DataUnion members) =
-    renderData name [] <> renderUnion name members <> defineTypeClass "UNION"
-  renderT (DataInputObject fields) =
-    renderData name []
-      <> renderCon name
-      <> renderObject renderInputField fields
-      <> defineTypeClass "INPUT_OBJECT"
-  renderT (DataObject fields) =
-    renderData name ["m"]
-      <> renderCon name
-      <> renderObject (renderField context) fields
-      <> defineTypeClass "OBJECT"
-  renderT (DataInputUnion _) = "\n -- Error: Input Union Not Supported"
-  ----------------------------------------------------------------------------------------------------------
-  typeIntro = "\n\n---- GQL " <> name <> " ------------------------------- \n"
-  ----------------------------------------------------------------------------------------------------------
-  defineTypeClass kind =
-    "\n\n"
-      <> renderInstanceHead "GQLType" name
-      <> indent
-      <> "type KIND "
-      <> name
-      <> " = "
-      <> kind
-      <> "\n\n"
+renderType context (_, datatype) = render context datatype
+
+class RenderType a where
+    render :: Context -> a -> Text
+
+instance RenderType DataType where
+  render context DataType { typeContent, typeName } = typeIntro
+    <> renderT typeContent
+   where
+    renderT (DataScalar _) =
+      renderData typeName []
+        <> renderCon typeName
+        <> "Int Int"
+        <> defineTypeClass "SCALAR"
+        <> renderGQLScalar typeName
+    renderT (DataEnum enums) =
+      renderData typeName []
+        <> unionType (map enumName enums)
+        <> defineTypeClass "ENUM"
+    renderT (DataUnion members) =
+      renderData typeName [] <> renderUnion typeName members <> defineTypeClass
+        "UNION"
+    renderT (DataInputObject fields) =
+      renderData typeName []
+        <> renderCon typeName
+        <> renderObject renderInputField fields
+        <> defineTypeClass "INPUT_OBJECT"
+    renderT (DataObject fields) =
+      renderData typeName ["m"]
+        <> renderCon typeName
+        <> renderObject (renderField context) fields
+        <> defineTypeClass "OBJECT"
+    renderT (DataInputUnion _) = "\n -- Error: Input Union Not Supported"
     ----------------------------------------------------------------------------------------------------------
+    typeIntro =
+      "\n\n---- GQL " <> typeName <> " ------------------------------- \n"
+    ----------------------------------------------------------------------------------------------------------
+    defineTypeClass kind =
+      "\n\n"
+        <> renderInstanceHead "GQLType" typeName
+        <> indent
+        <> "type KIND "
+        <> typeName
+        <> " = "
+        <> kind
+        <> "\n\n"
+        ----------------------------------------------------------------------------------------------------------
 
 
 renderGQLScalar :: Text -> Text
