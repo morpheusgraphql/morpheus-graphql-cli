@@ -41,7 +41,23 @@ import           Data.Morpheus.Types.Internal.AST
                                                 , Name
                                                 , DataTypeLib
                                                 )
-
+import           Data.Text.Prettyprint.Doc      ( pretty
+                                                , parens
+                                                , Doc
+                                                , nest
+                                                , encloseSep
+                                                , lbracket
+                                                , rbracket
+                                                , comma
+                                                , align
+                                                , lparen
+                                                , rparen
+                                                , list
+                                                , line
+                                                , vsep
+                                                , (<+>)
+                                                , hsep
+                                                )
 
 double :: Text -> Text
 double x = x <> x
@@ -85,8 +101,8 @@ renderSet fields =
 renderAssignment :: Text -> Text -> Text
 renderAssignment key value = key <> " :: " <> value
 
-renderExtension :: Text -> Text
-renderExtension name = "{-# LANGUAGE " <> name <> " #-}\n"
+renderExtension :: Text -> Doc ann
+renderExtension name = "{-# LANGUAGE " <+> pretty name <+> " #-}"
 
 renderWrapped :: [TypeWrapper] -> Text -> Text
 renderWrapped (TypeList  : xs) = renderList . renderWrapped xs
