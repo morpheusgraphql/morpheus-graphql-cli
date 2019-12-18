@@ -76,11 +76,11 @@ renderHaskellDocument modName lib =
   renderApiEvents :: Doc ann
   renderApiEvents
     | isJust (subscription lib)
-    = "data Channel = Channel -- ChannelA | ChannelB"
-      <+> "\n\n"
-      <+> "data Content = Content -- ContentA Int | ContentB String"
-      <+> "\n\n"
-      <+> "type ApiEvent = Event Channel Content"
+    = vsep
+        [ txt "data Channel = Channel -- ChannelA | ChannelB"
+        , txt "data Content = Content -- ContentA Int | ContentB String"
+        , txt "type ApiEvent = Event Channel Content"
+        ]
       <+> txt (double newline)
     | otherwise
     = "type ApiEvent = ()" <+> txt (double newline)
