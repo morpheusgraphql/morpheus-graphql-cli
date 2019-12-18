@@ -2,7 +2,7 @@
 
 module Rendering.Terms
   ( indent
-  , renderReturn
+  , renderPure
   , renderData
   , renderCon
   , renderMaybe
@@ -71,8 +71,8 @@ indent = "  "
 renderEqual :: Text -> Text -> Text
 renderEqual key value = key <> " = " <> value
 
-renderReturn :: Text
-renderReturn = "return "
+renderPure :: Text
+renderPure = "pure "
 
 newline :: Text
 newline = "\n"

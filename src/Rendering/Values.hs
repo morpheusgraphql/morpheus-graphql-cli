@@ -17,7 +17,7 @@ import           Rendering.Terms                ( Context(..)
                                                 , renderAssignment
                                                 , renderCon
                                                 , renderEqual
-                                                , renderReturn
+                                                , renderPure
                                                 , renderSet
                                                 , renderUnionCon
                                                 , ioRes
@@ -71,14 +71,15 @@ instance RenderValue DataType where
     renderFunc x = funcSig x <> funcName <> "= " <> newline
     funcName = "resolve" <> typeName <> " "
     funcSig :: Bool -> Text
-    funcSig isOutput
-      | isOutput  = __renderSig $ "(" <> typeName <> " ApiRes" <> ")"
-      | otherwise = __renderSig typeName
+    funcSig isOutput | isOutput  = __renderSig $ "(" <> typeName <> " m" <> ")"
+                     | otherwise = __renderSig typeName
      where
-      __renderSig x = renderAssignment funcName (monadSig <> x) <> newline
+      __renderSig x =
+        renderAssignment funcName ("Applicative m => " <> monadSig <> x)
+          <> newline
       ---------------------------------------------------------------------------------
       monadSig | isOperation typeName = ""
-               | otherwise            = "ApiRes "
+               | otherwise            = "m "
 
 isOperation :: Name -> Bool
 isOperation name = name `elem` operationNames
@@ -102,8 +103,8 @@ instance RenderValue DataField where
 instance RenderValue TypeRef where
   render _ TypeRef { typeWrappers, typeConName } = renderValue typeWrappers
    where
-    renderValue (TypeMaybe : _) = "$ " <> renderReturn <> "Nothing"
-    renderValue (TypeList  : _) = "$ " <> renderReturn <> "[]"
+    renderValue (TypeMaybe : _) = "$ " <> renderPure <> "Nothing"
+    renderValue (TypeList  : _) = "$ " <> renderPure <> "[]"
     renderValue []              = renderName typeConName
     ---------------------------------------------------
     renderName "String"  = "$ pure \"\""

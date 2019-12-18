@@ -63,7 +63,7 @@ data ArgCharacter =
     }
  deriving (Generic)
 
-resolveQuery :: (Query ApiRes)
+resolveQuery :: Applicative m => (Query m)
 resolveQuery = Query { deity     = const resolveDeity
                      , character = const resolveCharacter
                      , hero      = const resolveHuman
@@ -94,7 +94,7 @@ data ArgCreateCharacter =
     }
  deriving (Generic)
 
-resolveMutation :: (Mutation ApiRes)
+resolveMutation :: Applicative m => (Mutation m)
 resolveMutation = Mutation { createDeity     = const resolveDeity
                            , createCharacter = const resolveCharacter
                            }
@@ -108,7 +108,7 @@ data Deity (m :: * -> *) =
     }
  deriving (Generic, GQLType)
 
-resolveDeity :: ApiRes (Deity ApiRes)
+resolveDeity :: Applicative m => m (Deity m)
 resolveDeity =
   pure Deity { fullName = const $ pure "", power = const resolvePower }
 
@@ -121,10 +121,9 @@ data Human (m :: * -> *) =
     }
  deriving (Generic, GQLType)
 
-resolveHuman :: ApiRes (Human ApiRes)
-resolveHuman = pure Human { humanName  = const $ pure ""
-                          , profession = const $ return Nothing
-                          }
+resolveHuman :: Applicative m => m (Human m)
+resolveHuman =
+  pure Human { humanName = const $ pure "", profession = const $ pure Nothing }
 
 
 ---- GQL City ------------------------------- 
@@ -137,7 +136,7 @@ data City =
 instance GQLType City where
   type KIND City = ENUM
 
-resolveCity :: ApiRes City
+resolveCity :: Applicative m => m City
 resolveCity = pure Athens
 
 ---- GQL Power ------------------------------- 
@@ -151,7 +150,7 @@ instance GQLScalar  Power where
 instance GQLType Power where
   type KIND Power = SCALAR
 
-resolvePower :: ApiRes Power
+resolvePower :: Applicative m => m Power
 resolvePower = pure $ Power 0 0
 
 ---- GQL Realm ------------------------------- 
@@ -174,7 +173,7 @@ data Creature (m :: * -> *) =
     }
  deriving (Generic, GQLType)
 
-resolveCreature :: ApiRes (Creature ApiRes)
+resolveCreature :: Applicative m => m (Creature m)
 resolveCreature =
   pure Creature { creatureName = const $ pure "", realm = const resolveCity }
 
@@ -185,5 +184,5 @@ data Character (m :: * -> *) =
   | CharacterDeity (Deity m)
   | CharacterHuman (Human m) deriving (Generic, GQLType)
 
-resolveCharacter :: ApiRes (Character ApiRes)
+resolveCharacter :: Applicative m => m (Character m)
 resolveCharacter = CharacterCreature <$> resolveCreature

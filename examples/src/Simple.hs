@@ -2,40 +2,45 @@
 {-# LANGUAGE  DeriveGeneric  #-}
 {-# LANGUAGE  TypeFamilies  #-}
 {-# LANGUAGE  DeriveAnyClass  #-}
-module  Simple 
- (rootResolver) 
- where 
- 
-import Data.Typeable        (Typeable)
-import GHC.Generics         (Generic)
-import Data.Morpheus.Kind   (SCALAR,ENUM,INPUT,OBJECT,UNION)
-import Data.Morpheus.Types  (GQLRootResolver(..)
-                            ,Resolver(..)
-                            ,IORes
-                            ,IOMutRes
-                            ,IOSubRes
-                            ,Event(..)
-                            ,GQLType(..)
-                            ,GQLScalar(..)
-                            ,ScalarValue(..)
-                            ,Undefined(..)
-                            ,ResolveQ)
-import Data.Text            (Text)
-type ApiEvent = () 
+module Simple
+  ( rootResolver
+  )
+where
 
-type ApiRes = IORes ApiEvent 
+import           Data.Typeable                  ( Typeable )
+import           GHC.Generics                   ( Generic )
+import           Data.Morpheus.Kind             ( SCALAR
+                                                , ENUM
+                                                , INPUT
+                                                , OBJECT
+                                                , UNION
+                                                )
+import           Data.Morpheus.Types            ( GQLRootResolver(..)
+                                                , Resolver(..)
+                                                , IORes
+                                                , IOMutRes
+                                                , IOSubRes
+                                                , Event(..)
+                                                , GQLType(..)
+                                                , GQLScalar(..)
+                                                , ScalarValue(..)
+                                                , Undefined(..)
+                                                , ResolveQ
+                                                )
+import           Data.Text                      ( Text )
+type ApiEvent = ()
+
+type ApiRes = IORes ApiEvent
 
 rootResolver :: GQLRootResolver IO () Query Undefined Undefined
-rootResolver =
-  GQLRootResolver
-    { queryResolver = resolveQuery
-  ,  mutationResolver = Undefined
-  ,  subscriptionResolver = Undefined
-    }
+rootResolver = GQLRootResolver { queryResolver        = resolveQuery
+                               , mutationResolver     = Undefined
+                               , subscriptionResolver = Undefined
+                               }
 
 ---- GQL Query ------------------------------- 
 data Query (m :: * -> *) =
-  Query 
+  Query
     { deity :: ArgDeity -> m (Deity m)
   ,  character :: ArgCharacter -> m (Character m)
     }
@@ -43,41 +48,35 @@ data Query (m :: * -> *) =
 
 
 data ArgDeity =
-  ArgDeity 
+  ArgDeity
     { name :: Maybe [Maybe [Maybe [[Maybe [Text]]]]]
     }
  deriving (Generic)
 
 
 data ArgCharacter =
-  ArgCharacter 
+  ArgCharacter
     { characterID :: Text
   ,  age :: Maybe Int
     }
  deriving (Generic)
 
-resolveQuery  :: (Query ApiRes)
-resolveQuery = 
-  Query 
-    { deity = const resolveDeity
-  ,  character = const resolveCharacter
-    }
+resolveQuery :: Applicative m => (Query m)
+resolveQuery =
+  Query { deity = const resolveDeity, character = const resolveCharacter }
 
 
 ---- GQL Deity ------------------------------- 
 data Deity (m :: * -> *) =
-  Deity 
+  Deity
     { fullName :: () -> m Text
   ,  power :: () -> m (Maybe Power)
     }
  deriving (Generic, GQLType)
 
-resolveDeity  :: ApiRes (Deity ApiRes)
-resolveDeity = 
-  pure Deity 
-    { fullName = const $ pure ""
-  ,  power = const $ return Nothing
-    }
+resolveDeity :: Applicative m => m (Deity m)
+resolveDeity =
+  pure Deity { fullName = const $ pure "", power = const $ pure Nothing }
 
 
 ---- GQL City ------------------------------- 
@@ -90,41 +89,37 @@ data City =
 instance GQLType City where
   type KIND City = ENUM
 
-resolveCity  :: ApiRes City
-resolveCity = 
-  pure Athens 
+resolveCity :: Applicative m => m City
+resolveCity = pure Athens
 
 ---- GQL Power ------------------------------- 
 data Power =
   Power Int Int
 
 instance GQLScalar  Power where
-  parseValue _ = pure (Power 0 0 )
-  serialize (Power x y ) = Int (x + y)
+  parseValue _ = pure (Power 0 0)
+  serialize (Power x y) = Int (x + y)
 
 instance GQLType Power where
   type KIND Power = SCALAR
 
-resolvePower  :: ApiRes Power
-resolvePower = 
-  pure $ Power 0 0
+resolvePower :: Applicative m => m Power
+resolvePower = pure $ Power 0 0
 
 ---- GQL Creature ------------------------------- 
 data Creature (m :: * -> *) =
-  Creature 
+  Creature
     { creatureName :: () -> m Text
   ,  realm :: () -> m City
   ,  immortality :: () -> m Bool
     }
  deriving (Generic, GQLType)
 
-resolveCreature  :: ApiRes (Creature ApiRes)
-resolveCreature = 
-  pure Creature 
-    { creatureName = const $ pure ""
-  ,  realm = const resolveCity
-  ,  immortality = const $ pure False
-    }
+resolveCreature :: Applicative m => m (Creature m)
+resolveCreature = pure Creature { creatureName = const $ pure ""
+                                , realm        = const resolveCity
+                                , immortality  = const $ pure False
+                                }
 
 
 ---- GQL Character ------------------------------- 
@@ -132,6 +127,5 @@ data Character (m :: * -> *) =
     CharacterCreature (Creature m)
   | CharacterDeity (Deity m) deriving (Generic, GQLType)
 
-resolveCharacter  :: ApiRes (Character ApiRes)
-resolveCharacter = 
-  CharacterCreature  <$> resolveCreature
+resolveCharacter :: Applicative m => m (Character m)
+resolveCharacter = CharacterCreature <$> resolveCreature
