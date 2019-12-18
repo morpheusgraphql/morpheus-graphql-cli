@@ -18,6 +18,13 @@ packages:
       sha256: 7de75d80a5b3debd556ac6443f2ffeb49504c2aa08709ab8803174fc18a6ad90
   original:
     hackage: aeson-1.4.4.0
+- completed:
+    hackage: prettyprinter-1.5.1@sha256:fca87c3e2611d3499a0341a59857e9b424a23f31646e4737d535a18582284f96,5375
+    pantry-tree:
+      size: 2106
+      sha256: 86fd583112db41bac5ac9ecf258ec402ad615253e9c5eabc56ec127bfb94c096
+  original:
+    hackage: prettyprinter-1.5.1
 snapshots:
 - completed:
     size: 525663
