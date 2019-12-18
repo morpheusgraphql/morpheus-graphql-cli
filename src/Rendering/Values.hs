@@ -37,7 +37,6 @@ import           Data.Morpheus.Types.Internal.AST
                                                 , Name
                                                 )
 
-
 renderResolver :: Context -> (Text, DataType) -> Text
 renderResolver cxt = render cxt . snd
 

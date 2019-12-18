@@ -13,7 +13,7 @@ import           Data.Typeable                  ( Typeable )
 import           GHC.Generics                   ( Generic )
 import           Data.Morpheus.Kind             ( SCALAR
                                                 , ENUM
-                                                , INPUT_OBJECT
+                                                , INPUT
                                                 , OBJECT
                                                 , UNION
                                                 )
@@ -49,7 +49,8 @@ data Query (m :: * -> *) =
     }
  deriving (Generic, GQLType)
 
-newtype ArgDeity =
+
+data ArgDeity =
   ArgDeity
     { name :: Maybe [Maybe [Maybe [[Maybe [Text]]]]]
     }
@@ -84,7 +85,7 @@ data City =
   | Ithaca
   | Sparta
   | Troy
-  deriving (Generic)
+ deriving (Generic)
 
 instance GQLType City where
   type KIND City = ENUM
@@ -95,6 +96,7 @@ resolveCity = pure Athens
 ---- GQL Power ------------------------------- 
 data Power =
   Power Int Int
+
 instance GQLScalar  Power where
   parseValue _ = pure (Power 0 0)
   serialize (Power x y) = Int (x + y)
