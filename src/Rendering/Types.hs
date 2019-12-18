@@ -34,7 +34,7 @@ import           Rendering.Terms                ( Context(..)
                                                 , renderDeriving
                                                 , renderInstanceHead
                                                 , renderGQLTypeInstance
-                                                , renderTypeIntro
+                                                , label
                                                 , double
                                                 , newline
                                                 )
@@ -54,9 +54,25 @@ import           Data.Morpheus.Types.Internal.AST
                                                 , DataTypeKind(..)
                                                 , isOutputObject
                                                 )
+import           Data.Text.Prettyprint.Doc      ( pretty
+                                                , parens
+                                                , Doc
+                                                , nest
+                                                , encloseSep
+                                                , lbracket
+                                                , rbracket
+                                                , comma
+                                                , align
+                                                , lparen
+                                                , rparen
+                                                , list
+                                                , line
+                                                , vsep
+                                                , (<+>)
+                                                , hsep
+                                                )
 
-
-renderType :: Context -> (Text, DataType) -> Text
+renderType :: Context -> (Text, DataType) -> Doc ann
 renderType context (_, datatype) = case render context datatype of
   Right x -> x
   Left  x -> error (unpack x)
@@ -64,7 +80,7 @@ renderType context (_, datatype) = case render context datatype of
 type Result = Either Text
 
 class RenderType a where
-    render :: Context -> a -> Result Text
+    render :: Context -> a -> Result (Doc ann)
 
 getKind :: DataTypeLib -> Name -> Result DataTypeKind
 getKind _ "String"  = pure KindScalar
@@ -76,7 +92,7 @@ getKind lib name =
 
 instance RenderType DataType where
   render context DataType { typeContent, typeName } =
-    (renderTypeIntro typeName <>) <$> renderT typeContent
+    (label typeName <>) . pretty <$> renderT typeContent
    where
     renderT (DataScalar _) =
       pure

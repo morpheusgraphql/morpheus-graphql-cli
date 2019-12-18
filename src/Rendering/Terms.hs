@@ -20,7 +20,7 @@ module Rendering.Terms
   , renderDeriving
   , renderInstanceHead
   , renderGQLTypeInstance
-  , renderTypeIntro
+  , label
   , newline
   , double
   )
@@ -128,9 +128,9 @@ renderGQLTypeInstance typeName kind =
     <> kind
     <> newline
 
-renderTypeIntro :: Name -> Text
-renderTypeIntro typeName =
-  "\n---- GQL " <> typeName <> " ------------------------------- \n"
+label :: Name -> Doc ann
+label typeName =
+  "\n---- GQL " <> pretty typeName <> " ------------------------------- \n"
 
 renderInstanceHead :: Text -> Text -> Text
 renderInstanceHead className name =

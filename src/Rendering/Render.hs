@@ -65,7 +65,7 @@ renderHaskellDocument modName lib =
     <> renderApiEvents
     <> apiRes
     <> txt (renderRootResolver context lib)
-    <> txt types
+    <> types
  where
   encodeText = encodeUtf8 . LT.fromStrict
   onSub onS els = case subscription lib of
@@ -84,9 +84,9 @@ renderHaskellDocument modName lib =
       <+> txt (double newline)
     | otherwise
     = "type ApiEvent = ()" <+> txt (double newline)
-  types = intercalate newline $ map renderFullType (allDataTypes lib)
+  types = cat $ map renderFullType (allDataTypes lib)
    where
-    renderFullType x = renderType cont x <> newline <> renderResolver cont x
+    renderFullType x = renderType cont x <> line <> txt (renderResolver cont x)
      where
       cont = context { scope = getScope $ fst x }
       getScope "Mutation"     = Mutation
