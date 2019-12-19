@@ -40,6 +40,7 @@ import           Data.Morpheus.Types.Internal.AST
                                                 ( TypeWrapper(..)
                                                 , Name
                                                 , DataTypeLib
+                                                , OperationType
                                                 )
 import           Data.Text.Prettyprint.Doc      ( pretty
                                                 , parens
@@ -141,16 +142,11 @@ renderDeriving :: [Text] -> Text
 renderDeriving list =
   " deriving " <> renderTuple (intercalate ", " ("Generic" : list)) <> newline
 
-data Scope
-  = Mutation
-  | Subscription
-  | Query
-
 data Context = Context
   { moduleName :: Text
   , imports    :: [(Text, [Text])]
   , extensions :: [Text]
-  , scope      :: Scope
+  , scope      :: OperationType
   , pubSub     :: (Text, Text)
   , schema :: DataTypeLib
   }

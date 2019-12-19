@@ -35,6 +35,7 @@ import           Data.Morpheus.Types.Internal.AST
                                                 , TypeWrapper(..)
                                                 , Collection
                                                 , Name
+                                                , OperationType(..)
                                                 )
 
 renderResolver :: Context -> (Text, DataType) -> Text
@@ -44,7 +45,8 @@ class RenderValue a where
   render :: Context -> a -> Text
 
 instance RenderValue DataType where
-  render cxt DataType { typeName, typeContent } = __render typeContent
+  render cxt@Context { scope } DataType { typeName, typeContent } = __render
+    typeContent
    where
     __render DataScalar{} =
       renderFunc False <> renderPure <> "$ " <> renderCon typeName <> "0 0"
@@ -70,15 +72,17 @@ instance RenderValue DataType where
     renderFunc x = funcSig x <> funcName <> "= " <> newline
     funcName = "resolve" <> typeName <> " "
     funcSig :: Bool -> Text
-    funcSig isOutput | isOutput  = __renderSig $ "(" <> typeName <> " m" <> ")"
-                     | otherwise = __renderSig typeName
+    funcSig isOutput
+      | isOutput  = __renderSig $ "(" <> typeName <> " " <> monadName <> ")"
+      | otherwise = __renderSig typeName
      where
-      __renderSig x =
-        renderAssignment funcName ("Applicative m => " <> monadSig <> x)
-          <> newline
+      __renderSig x = renderAssignment funcName (monadSig <> x) <> newline
+
+      monadName | scope == Mutation = "ApiRes"
+                | otherwise         = "APiRes"
       ---------------------------------------------------------------------------------
       monadSig | isOperation typeName = ""
-               | otherwise            = "m "
+               | otherwise            = monadName <> " "
 
 isOperation :: Name -> Bool
 isOperation name = name `elem` operationNames

@@ -33,7 +33,6 @@ import           Rendering.Values               ( Scope(..)
                                                 )
 import           Data.Morpheus.Types.Internal.AST
                                                 ( DataTypeLib(..)
-                                                , allDataTypes
                                                 , DataType
                                                 )
 import           Data.Text.Prettyprint.Doc      ( pretty
