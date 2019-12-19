@@ -34,6 +34,7 @@ import           Rendering.Values               ( Scope(..)
 import           Data.Morpheus.Types.Internal.AST
                                                 ( DataTypeLib(..)
                                                 , allDataTypes
+                                                , DataType
                                                 )
 import           Data.Text.Prettyprint.Doc      ( pretty
                                                 , parens
@@ -53,6 +54,13 @@ import           Data.Text.Prettyprint.Doc      ( pretty
                                                 , hsep
                                                 , cat
                                                 )
+import           Data.HashMap.Lazy              ( HashMap
+                                                , empty
+                                                , fromList
+                                                , insert
+                                                , toList
+                                                , union
+                                                )
 
 renderHaskellDocument :: String -> DataTypeLib -> ByteString
 renderHaskellDocument modName lib =
@@ -65,7 +73,7 @@ renderHaskellDocument modName lib =
     <> renderApiEvents
     <> apiRes
     <> txt (renderRootResolver context lib)
-    <> types
+    <> renderTypes
  where
   encodeText = encodeUtf8 . LT.fromStrict
   onSub onS els = case subscription lib of
@@ -84,14 +92,16 @@ renderHaskellDocument modName lib =
       <+> txt (double newline)
     | otherwise
     = "type ApiEvent = ()" <+> txt (double newline)
-  types = cat $ map renderFullType (allDataTypes lib)
+  renderTypes = cat $ map renderFullType ts
    where
-    renderFullType x = renderType cont x <> line <> txt (renderResolver cont x)
-     where
-      cont = context { scope = getScope $ fst x }
-      getScope "Mutation"     = Mutation
-      getScope "Subscription" = Subscription
-      getScope _              = Query
+    ts :: [(Text, DataType)]
+    ts = toList (types lib)
+    renderFullType :: (Text, DataType) -> Doc ann
+    renderFullType x =
+      renderType context x
+        <> line
+        <> txt (renderResolver context { scope = Query } x)
+        <> txt (renderResolver (context { scope = Mutation }) x)
   context = Context
     { moduleName = pack modName
     , imports    = [ ("Data.Typeable", ["Typeable"])
@@ -125,7 +135,6 @@ renderHaskellDocument modName lib =
     , schema     = lib
     }
 
-
 renderLanguageExtensions :: Context -> Doc ann
 renderLanguageExtensions Context { extensions } =
   vsep (map renderExtension extensions) <> line
@@ -146,13 +155,11 @@ renderImports Context { imports } =
   align $ vsep (map renderImport (fillLength imports)) <> line
   where renderImport (src, ls) = hsep ["import", txt src, align (sepMap ls)]
 
-
 sepMap :: [Text] -> Doc ann
 sepMap ls = align (encloseSep lparen rparen comma (map pretty ls))
 
 txt :: Text -> Doc ann
 txt = pretty
-
 
 fillLength :: [(Text, a)] -> [(Text, a)]
 fillLength ls = map fillfst ls
