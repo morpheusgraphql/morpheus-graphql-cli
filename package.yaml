@@ -1,6 +1,6 @@
 name: morpheus-graphql-cli
 version: 0.1.0
-github: "https://github.com/morpheusgraphql/morpheus-graphql-cli"
+github: "morpheusgraphql/morpheus-graphql-cli"
 license: BSD3
 author: "Daviti Nalchevanidze"
 category: web, graphql, cli
