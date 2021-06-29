@@ -4,7 +4,7 @@ resolver: lts-12.16
 allow-newer: true
 
 extra-deps:
-  - morpheus-graphql-0.7.0
+  - morpheus-graphql-0.8.0
   - bifunctors-5.5.2
   - base-orphans-0.7
   - megaparsec-7.0.5
