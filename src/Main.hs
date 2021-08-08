@@ -90,8 +90,7 @@ defaultParser = customExecParser
       commands =
         [ Behavior
           { bName  = "build"
-          , bValue = pure Build <*> pathParser "Source.gql" <*> pathParser
-                       "Target.hs"
+          , bValue = Build <$> pathParser "Source.gql" <*> pathParser "Target.hs"
           , bDesc  = "builds haskell API from  from GhraphQL schema \"*.gql\"  "
           }
         , Behavior { bName  = "about"
