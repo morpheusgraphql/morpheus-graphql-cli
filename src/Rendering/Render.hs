@@ -1,104 +1,108 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE NamedFieldPuns    #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Rendering.Render
-  ( renderHaskellDocument
+  ( renderHaskellDocument,
   )
 where
 
-import           Data.ByteString.Lazy.Char8     ( ByteString )
-import           Data.Semigroup                 ( (<>) )
-import           Data.Text                      ( Text
-                                                , intercalate
-                                                , pack
-                                                )
-import qualified Data.Text                     as T
-                                                ( concat )
-import qualified Data.Text.Lazy                as LT
-                                                ( fromStrict )
-import           Data.Text.Lazy.Encoding        ( encodeUtf8 )
-
+import Data.ByteString.Lazy.Char8 (ByteString)
 -- MORPHEUS
-import           Rendering.Terms                ( Context(..)
-                                                , renderExtension
-                                                )
-import           Rendering.Types                ( renderType )
-import           Rendering.Values               ( Scope(..)
-                                                , renderResolver
-                                                , renderRootResolver
-                                                )
-import           Data.Morpheus.Types.Internal.AST
-                                                ( DataTypeLib(..)
-                                                , allDataTypes
-                                                )
+
+import Data.HashMap.Lazy
+  ( toList,
+  )
+import Data.Morpheus.Types.Internal.AST
+  ( DataType,
+    DataTypeLib (..),
+  )
+import Data.Semigroup ((<>))
+import Data.Text
+  ( Text,
+    pack,
+  )
+import qualified Data.Text.Lazy as LT
+  ( fromStrict,
+  )
+import Data.Text.Lazy.Encoding (encodeUtf8)
+import Data.Text.Prettyprint.Doc
+  ( (<+>),
+    Doc,
+    cat,
+    comma,
+    encloseSep,
+    line,
+    lparen,
+    pretty,
+    rparen,
+    vsep,
+  )
+import Rendering.Terms
+  ( Context (..),
+    renderExtension,
+  )
+import Rendering.Types (renderType)
 
 renderHaskellDocument :: String -> DataTypeLib -> ByteString
 renderHaskellDocument modName lib =
-  encodeText
-    $  renderLanguageExtensions context
-    <> renderExports context
-    <> renderImports context
-    <> onSub renderApiEvents ""
-    <> renderRootResolver context lib
-    <> types
- where
-  encodeText = encodeUtf8 . LT.fromStrict
-  onSub onS els = case subscription lib of
-    Nothing -> els
-    _       -> onS
-  renderApiEvents =
-    "data Channel = Channel -- ChannelA | ChannelB"
-      <> "\n\n"
-      <> "data Content = Content -- ContentA Int | ContentB String"
-      <> "\n\n"
-  types = intercalate "\n\n" $ map renderFullType (allDataTypes lib)
-   where
-    renderFullType x = renderType cont x <> "\n\n" <> renderResolver cont x
-     where
-      cont = context { scope = getScope $ fst x }
-      getScope "Mutation"     = Mutation
-      getScope "Subscription" = Subscription
-      getScope _              = Query
-  context = Context
-    { moduleName = pack modName
-    , imports    = [ ("GHC.Generics", ["Generic"])
-                   , ( "Data.Morpheus.Kind"
-                     , ["SCALAR", "ENUM", "INPUT_OBJECT", "OBJECT", "UNION"]
-                     )
-                   , ( "Data.Morpheus.Types"
-                     , [ "GQLRootResolver(..)"
-                       , "toMutResolver"
-                       , "IORes"
-                       , "IOMutRes"
-                       , "IOSubRes"
-                       , "Event(..)"
-                       , "SubRootRes"
-                       , "GQLType(..)"
-                       , "GQLScalar(..)"
-                       , "ScalarValue(..)"
-                       ]
-                     )
-                   , ("Data.Text", ["Text"])
-                   ]
-    , extensions = ["OverloadedStrings", "DeriveGeneric", "TypeFamilies"]
-    , scope      = Query
-    , pubSub     = onSub ("Channel", "Content") ("()", "()")
-    }
+  encodeUtf8
+    $ LT.fromStrict
+    $ pack
+    $ show
+    $ renderLanguageExtensions context
+      <> renderExports context
+      <> renderImports context
+      <> renderTypes
+  where
+    renderTypes = cat $ map renderFullType ts
+      where
+        ts :: [(Text, DataType)]
+        ts = toList (types lib)
+        renderFullType :: (Text, DataType) -> Doc ann
+        renderFullType = renderType context
+    context =
+      Context
+        { moduleName = pack modName,
+          imports =
+            [ ( "Data.Morpheus.Kind",
+                ["SCALAR", "ENUM", "INPUT", "OBJECT", "UNION"]
+              ),
+              ( "Data.Morpheus.Types",
+                [ "GQLType (..)",
+                  "GQLScalar (..)",
+                  "ScalarValue (..)"
+                ]
+              ),
+              ("Data.Text", ["Text"]),
+              ("GHC.Generics", ["Generic"])
+            ],
+          extensions =
+            [ "DeriveAnyClass",
+              "DeriveGeneric",
+              "TypeFamilies"
+            ],
+          schema = lib
+        }
 
-renderLanguageExtensions :: Context -> Text
-renderLanguageExtensions Context { extensions } =
-  T.concat (map renderExtension extensions) <> "\n"
+renderLanguageExtensions :: Context -> Doc ann
+renderLanguageExtensions Context {extensions} =
+  vsep (map renderExtension extensions)
+    <> line
+    <> line
 
-renderExports :: Context -> Text
-renderExports Context { moduleName } =
-  "-- generated by 'Morpheus' CLI\n"
-    <> "module "
-    <> moduleName
-    <> " (rootResolver) where\n\n"
+renderExports :: Context -> Doc ann
+renderExports Context {moduleName} =
+  "module"
+    <+> pretty moduleName
+    <+> "where"
+    <> line
+    <> line
 
-renderImports :: Context -> Text
-renderImports Context { imports } = T.concat (map renderImport imports) <> "\n"
- where
-  renderImport (src, list) =
-    "import  " <> src <> "  (" <> intercalate ", " list <> ")\n"
+renderImports :: Context -> Doc ann
+renderImports Context {imports} = vsep (map renderImport imports) <> line
+  where
+    renderImport (src, ls) = "import" <+> pretty src <+> sepMap ls
+
+sepMap :: [Text] -> Doc ann
+sepMap ls = encloseSep lparen rparen comma (map pretty ls)

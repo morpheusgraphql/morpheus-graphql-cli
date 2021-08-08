@@ -44,9 +44,7 @@ main = defaultParser >>= buildHaskellApi
     executeCommand About =
       putStrLn $ "Morpheus GraphQL CLI, version " <> morpheusVersion
     executeCommand Build { source, target } =
-      toMorpheusHaskellAPi (takeBaseName target)
-        <$> L.readFile source
-        >>= saveDocument
+      L.readFile source >>= saveDocument . toMorpheusHaskellAPi (takeBaseName target)
      where
       saveDocument (Left  errors) = print errors
       saveDocument (Right doc   ) = L.writeFile target doc
@@ -90,9 +88,8 @@ defaultParser = customExecParser
       commands =
         [ Behavior
           { bName  = "build"
-          , bValue = pure Build <*> pathParser "Source.gql" <*> pathParser
-                       "Target.hs"
-          , bDesc  = "builds haskell API from  from GhraphQL schema \"*.gql\"  "
+          , bValue = Build <$> pathParser "Source.gql" <*> pathParser "Target.hs"
+          , bDesc  = "builds haskell API from  from GraphQL schema \"*.gql\"  "
           }
         , Behavior { bName  = "about"
                    , bValue = pure About

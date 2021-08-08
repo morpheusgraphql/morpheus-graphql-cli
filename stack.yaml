@@ -2,5 +2,9 @@
 resolver: lts-14.14
 
 extra-deps:
-  - morpheus-graphql-0.7.0
+  - morpheus-graphql-0.8.0
   - aeson-1.4.4.0
+  - prettyprinter-1.5.1
+
+packages:
+  - .
